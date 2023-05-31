@@ -101,8 +101,18 @@ export const Field = class {
     /** @var array маппинг ошибок */
     errorsMap = {
         required: (ctx) => `Поле "${ctx.labelOrName}" обязательно для заполнения`,
-        length: (ctx) => `Длина поля "${ctx.labelOrName}" должна быть от ${ctx._min} до ${ctx._max} символов`,
-        range: (ctx) => `Значение поля "${ctx.labelOrName}" должно быть в диапазоне от ${ctx._min} до ${ctx._max}`,
+        length: (ctx) => {
+            let msg = `Длина поля "${ctx.labelOrName}" должна быть`
+            if (ctx._min) msg += ` от ${ctx._min}`
+            if (ctx._max) msg += ` до ${ctx._max}`
+            return msg + ' символов'
+        },
+        range: (ctx) => {
+            let msg = `Значение поля "${ctx.labelOrName}" должно быть в диапазоне`
+            if (ctx._min) msg += ` от ${ctx._min}`
+            if (ctx._max) msg += ` до ${ctx._max}`
+            return msg
+        },
         pattern: (ctx) => `Проверьте правильность поля "${ctx.labelOrName}"`,
         options: (ctx) => `Поле "${ctx.labelOrName}" не совпадает с доступными опциями`,
         same: (ctx) => `Значения полей "${ctx.labelOrName}" и "${ctx.sameLabelOrName}" должны совпадать`,
@@ -174,9 +184,9 @@ export const Field = class {
      * @return mixed значение
      */
     convertType(value) {
-        if (this.isStringType) return String(value)
+        if (this.isStringType) return value == null ? '' : String(value)
         if (this.isNumberType) return Number(value)
-        if (this.isBooleanType) return Boolean(value)
+        if (this.isBooleanType) return Boolean()
         throw new Error(`Field "${this._name}" has unknown type: ${this._type}`)
     }
 

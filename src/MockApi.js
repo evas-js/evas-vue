@@ -80,7 +80,7 @@ export class MockApi {
     findById(rows, id, returnIndex = false) {
         //id = Number(id) Все id как правило uuid!!!
         if (returnIndex) {
-            let index = rows.find(row => row.id === id)
+            let index = rows.findIndex(row => row.id === id)
             if (-1 === index) this.err400(`Запись с id=${id} не найдена`)
             return index
         } else {

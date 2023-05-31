@@ -8,7 +8,10 @@
 import { reactive } from 'vue'
 import { Api } from './Api.js'
 
-export const EvasVueCore = new function () {
+export { Model } from './Model.js'
+export { MockApi } from './MockApi.js'
+
+export const EvasVue = new function () {
     // this.state = reactive({})
     this.models = reactive({})
     this.api = null

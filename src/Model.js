@@ -5,7 +5,7 @@
  * @license CC-BY-4.0
  */
 import { Api } from './Api.js'
-import { EvasVueCore } from './index.js'
+import { EvasVue } from './index.js'
 import { Field } from './Field.js'
 import { ModelsStore } from './ModelsStore.js'
 import { Relation } from './Relation.js'
@@ -21,34 +21,56 @@ export const Model = class {
         return {}
     }
 
-    static prepareCachedFieldsAndRelations() {
-        if (this._cachedFields && this._cachedRelations) return
-        this._cachedFields = {}
-        this._cachedRelations = {}
-        let fields = this.fields()
-        for (let name in fields) {
-            let field = fields[name]
-            if (field instanceof Field) {
-                field.name(name)
-                this._cachedFields[name] = field
-            }
-            if (field instanceof Relation) {
-                field.name(name)
-                this._cachedRelations[name] = field
-            }
-        }
+    static relations() {
+        return {}
     }
+
+    // static prepareCachedFieldsAndRelations() {
+    //     if (this._cachedFields && this._cachedRelations) return
+    //     this._cachedFields = {}
+    //     this._cachedRelations = {}
+    //     let fields = this.fields()
+    //     for (let name in fields) {
+    //         let field = fields[name]
+    //         if (field instanceof Field) {
+    //             field.name(name)
+    //             this._cachedFields[name] = field
+    //         }
+    //         if (field instanceof Relation) {
+    //             field.name(name)
+    //             this._cachedRelations[name] = field
+    //         }
+    //     }
+    // }
 
     static cachedFields() {
         if (!this._cachedFields) {
-            this.prepareCachedFieldsAndRelations()
+            // this.prepareCachedFieldsAndRelations()
+            this._cachedFields = {}
+            let fields = this.fields()
+            for (let name in fields) {
+                let field = fields[name]
+                if (field instanceof Field) {
+                    field.name(name)
+                    this._cachedFields[name] = field
+                }
+            }
         }
         return this._cachedFields
     }
 
     static cachedRelations() {
         if (!this._cachedRelations) {
-            this.prepareCachedFieldsAndRelations()
+            // this.prepareCachedFieldsAndRelations()
+            this._cachedRelations = {}
+            let relations = this.relations()
+            for (let name in relations) {
+                let relation = relations[name]
+                if (relation instanceof Relation) {
+                    relation.name(name)
+                    this._cachedRelations[name] = relation
+                }
+            }
         }
         return this._cachedRelations
     }
@@ -83,6 +105,10 @@ export const Model = class {
             if (cb.apply(this, [field, name])) return true
         }
         return false
+    }
+
+    static isRelationKey(key) {
+        return Object.keys(this.cachedRelations()).includes(key)
     }
 
     static attr(_default) {
@@ -393,27 +419,27 @@ export const Model = class {
         let edited = []
         this.eachFields((field) => {
             if (this.isDirtyField(field._name)) {
-                console.log(
-                    'cb',
-                    field._name,
-                    this.isDirtyField(field._name),
-                    this.$state[field._name]
-                )
+                // console.log(
+                //     'cb',
+                //     field._name,
+                //     this.isDirtyField(field._name),
+                //     this.$state[field._name]
+                // )
                 edited.push(field._name)
             }
         }, keys)
         this.constructor.eachRelations((relation) => {
             // if (this.isDirtyField(relation._name)) {
             if (this.isDirtyRelateds(relation)) {
-                console.log(
-                    'cb-r',
-                    relation._name,
-                    // this.isDirtyField(relation._name),
-                    // this.$state[relation._name]
-                    relation,
-                    this.$state[relation._name]?.[relation.foreign],
-                    this[relation._name]?.[relation.foreign]
-                )
+                // console.log(
+                //     'cb-r',
+                //     relation._name,
+                //     // this.isDirtyField(relation._name),
+                //     // this.$state[relation._name]
+                //     relation,
+                //     this.$state[relation._name]?.[relation.foreign],
+                //     this[relation._name]?.[relation.foreign]
+                // )
                 edited.push(relation._name)
             }
         }, keys)
@@ -468,40 +494,79 @@ export const Model = class {
 
     // validate
 
+    static validateErrorHandlers = {}
+    static defaultValidateErrorHandler = null
+
+    static setDefaultValidateErrorHandler(cb) {
+        if ('function' !== typeof cb) throw new Error(
+            `default validate error handler must be a function, ${typeof cb} given`
+        )
+        this.defaultValidateErrorHandler = cb
+        return this
+    }
+
+    static addValidateErrorHandler(fieldName, cb) {
+        if (!['string', 'number'].includes(typeof fieldName)) throw new Error(
+            `validate error handler field name must a string, ${typeof fieldName} given`
+        )
+        if ('function' !== typeof cb) throw new Error(
+            `validate error handler for field "${fieldName}" must be a function, ${typeof cb} given`
+        )
+        this.validateErrorHandlers[fieldName] = cb
+        return this
+    }
+
+    static handleValidateError(field, error) {
+        if (this.validateErrorHandlers[field._name]) {
+            this.validateErrorHandlers[field._name](error)
+        } else if (this.defaultValidateErrorHandler) {
+            this.defaultValidateErrorHandler(error, field._name)
+        } else {
+            console.error(field, error)
+        }
+    }
+
+    errors = []
+
     validate() {
-        /*
+        this.errors = []
         this.eachFields((field) => {
-            field.throwIfNotValid(this[field._name])
+            // field.throwIfNotValid(this[field._name])
+            if (!field.isValid(this[field._name])) {
+                this.constructor.handleValidateError(field, field.error)
+                this.errors.push(field.error)
+            }
         }, this.dirtyFields())
-        */
+        return this.errors.length < 1
     }
 
     // instance mutations
 
     /**
      * Сохранение записи.
-     * @param Function колбэк после удаления
+     * @param Function колбэк после сохранения
      */
     $save(cb) {
-        console.log('$save', this, this.$isDirty, this.$id, this.$isNew)
+        console.log('$save', this, this.$isDirty, this.$id, this.$isNew, this.constructor.useApi)
         // console.log(this.$updatedProps.keys())
         if (!this.$isDirty) return
 
         if (this.$isNew) {
             this.beforeInsert()
-            this.validate()
-            this.constructor.fetchInsert(this.$dirtyData, cb)
-            this.$saveState()
-            this.afterInsert()
+            if (this.validate()) {
+                if (this.constructor.useApi) this.constructor.fetchInsert(this.$dirtyData, cb)
+                else this.$saveState()
+                this.afterInsert()
+            }
         } else {
             this.beforeUpdate()
-            this.validate()
-            this.constructor.fetchUpdate(
-                { id: this.$id, ...this.$dirtyData },
-                cb
-            )
-            this.$saveState()
-            this.afterUpdate()
+            if (this.validate()) {
+                if (this.constructor.useApi) this.constructor.fetchUpdate(
+                    { id: this.$id, ...this.$dirtyData }, cb
+                )
+                else this.$saveState()
+                this.afterUpdate()
+            }
         }
     }
 
@@ -511,8 +576,8 @@ export const Model = class {
      */
     $delete(cb) {
         this.beforeDelete()
-        this.constructor.delete(this, cb)
-        this.$saveState()
+        if (this.constructor.useApi) this.constructor.delete(this, cb)
+        else this.$saveState()
         this.afterDelete()
     }
 
@@ -589,7 +654,7 @@ export const Model = class {
                 if (data.$data) {
                     data.$data.forEach((sub) => {
                         let type = sub.type || this.entityName
-                        let model = EvasVueCore.getModel(type)
+                        let model = EvasVue.getModel(type)
                         if (!model) {
                             console.error(`Model ${type} not found`)
                             return
