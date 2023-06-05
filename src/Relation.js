@@ -5,7 +5,7 @@
  * @license CC-BY-4.0
  */
 
-export const Relation = class {
+export class Relation {
     _name
     type
     model
