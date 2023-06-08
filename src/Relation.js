@@ -6,7 +6,7 @@
  */
 
 export class Relation {
-    _name
+    name
     type
     model
     local
@@ -38,9 +38,4 @@ export class Relation {
         let p = model.primary
         return full ? `${model.entityName.toLowerCase()}_${p}` : p
     }
-
-    name(name) {
-        this._name = name
-    }
-
 }
