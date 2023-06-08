@@ -9,10 +9,20 @@ import { Model } from './Model.js'
 import { Field } from '../Field/Field.js'
 import { FieldBuilder } from '../Field/FieldBuilder.js'
 
+/**
+ * Установка полей модели.
+ */
 Model.setFields = function () {
     return []
 }
 
+/** @var Array поля, отправляемые в любом случае, даже если не менялись */
+Model.alwaysSend = null
+
+/**
+ * Получение установленных полей модели.
+ * @return Object Field by names
+ */
 Model.fields = function () {
     if (this.isRootModel()) return {}
     if (!this._fields) {
@@ -34,6 +44,10 @@ Model.fields = function () {
     return this._fields
 }
 
+/**
+ * Получение имён полей модели.
+ * @return Array
+ */
 Model.fieldNames = function () {
     return Object.keys(this.fields())
 }

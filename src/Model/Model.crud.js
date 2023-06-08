@@ -112,27 +112,42 @@ Model.delete = function (entity, cb, afterFetch = false) {
 // instance mutations
 
 /**
+ * Получение данных для сохранения.
+ * @return Object $dirtyData + alwaysSend
+ */
+Object.defineProperty(Model.prototype, '$dataToSave', {
+    get: function () {
+        let data = { ...this.$dirtyData }
+        if (Array.isArray(this.constructor.alwaysSend)) {
+            let alwaysSendData = {}
+            this.constructor.alwaysSend.forEach(key => alwaysSendData[key] = this[key])
+            data = { ...alwaysSendData, ...data }
+        }
+        if (!this.$isNew) data[this.constructor.primary] = this.$id
+        console.log('$dataToSave', data)
+        return data
+    }
+})
+
+/**
  * Сохранение записи.
  * @param Function колбэк после сохранения
  */
 Model.prototype.$save = function (cb) {
     console.log('$save', this, this.$isDirty, this.$id, this.$isNew, this.constructor.useApi)
-    // console.log(this.$updatedProps.keys())
     if (!this.$isDirty) return
 
     if (this.$isNew) {
         this.$beforeInsert()
         if (this.$validate()) {
-            if (this.constructor.useApi) this.constructor.fetchInsert(this.$dirtyData, cb)
+            if (this.constructor.useApi) this.constructor.fetchInsert(this.$dataToSave, cb)
             else this.$saveState()
             this.$afterInsert()
         }
     } else {
         this.$beforeUpdate()
         if (this.$validate()) {
-            if (this.constructor.useApi) this.constructor.fetchUpdate(
-                { id: this.$id, ...this.$dirtyData }, cb
-            )
+            if (this.constructor.useApi) this.constructor.fetchUpdate(this.$dataToSave, cb)
             else this.$saveState()
             this.$afterUpdate()
         }
