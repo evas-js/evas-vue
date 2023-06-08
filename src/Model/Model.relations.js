@@ -8,7 +8,7 @@
 import { Model } from './Model.js'
 import { Relation } from '../Relation.js'
 
-Model.addRelations = function () {
+Model.setRelations = function () {
     return []
 }
 
@@ -16,11 +16,11 @@ Model.relations = function () {
     if (this.isRootModel()) return []
     if (!this._relations) {
         this._relations = {}
-        let relations = this.addRelations()
+        let relations = this.setRelations()
         for (let name in relations) {
             let relation = relations[name]
             if (relation instanceof Relation) {
-                relation.name(name)
+                relation.name = name
                 this._relations[name] = relation
             }
         }
