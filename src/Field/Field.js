@@ -1,39 +1,39 @@
 /**
- * Field validator.
+ * Field.
  * @package evas-vue
  * @author Egor Vasyakin <egor@evas-php.com>
  * @license CC-BY-4.0
  */
 
+import { FieldBuilder } from './FieldBuilder.js'
+
 export class Field {
-    /** @var string имя поля */
+    /** @var String имя поля */
     name
-    // /** @var string лейбл поля */
-    // label
-    // /** @var bool обязательность значения */
-    // required = true
-    // /** @var string тип */
-    // type = 'string'
-    // /** @var number минимальное значение или длина */
-    // min = 0
-    // /** @var number|null максимальное значение или длина */
-    // max
-    // /** @var string|null паттерн значения */
-    // pattern
-    // /** @var object|array|null опции значения */
-    // options
-    // /** @var string|null имя совпадающего поля */
-    // same
-    // /** @var string|null лейбл совпадающего поля */
-    // sameLabel
-    // /** @var mixed значение по умолчанию */
-    // default
-    // /** @var mixed значение */
-    // value
-    // /** @var string|null ошибка валидации */
-    // error
-    // /** @var string|null вид отображения */
-    // view
+    /** @var String лейбл поля */
+    label
+    /** @var Boolean обязательность значения */
+    required = true
+    /** @var String тип */
+    type = 'string'
+    /** @var Number минимальное значение или длина */
+    min = 0
+    /** @var Number максимальное значение или длина */
+    max
+    /** @var String паттерн значения */
+    pattern
+    /** @var Object|Array опции значения */
+    options
+    /** @var String имя совпадающего поля */
+    same
+    /** @var String лейбл совпадающего поля */
+    sameLabel
+    /** @var mixed значение по умолчанию */
+    default
+    /** @var mixed значение */
+    value
+    /** @var String ошибка валидации */
+    error
     
     /**
      * Конструктор.
@@ -41,21 +41,80 @@ export class Field {
      */
     constructor(props) {
         // if (props) for (let key in props) this[key] = props[key]
-        if (props) for (let key in props) {
-            let func = this[key]
-            if (func) func.call(this, props[key])
+        if (props) {
+            if (props instanceof FieldBuilder) {
+                props = props.export()
+            }
+            if ('object' === typeof props && !Array.isArray(props)) for (let key in props) {
+                // let func = this[key]
+                // if (func) func.call(this, props[key])
+                this[key] = props[key]
+            }
+            else {
+                console.error(
+                    'Field props must be an object or an instanceof FieldBuilder,',
+                    `${typeof props} given`,
+                    props
+                )
+            }
         }
 
-        return new Proxy(this, {
-            // get: function (self, key) {
-            get: function (self, key) {
-                // if (key in self) return self[key]
-                return function () {
-                    console.log(key, arguments)
-                    return this
-                }
-            }
-        })
+        // return new Proxy(this, {
+        //     // get: function (self, key) {
+        //     get: function (self, key) {
+        //         // if (key in self) return self[key]
+        //         return function () {
+        //             console.log(key, arguments)
+        //             return this
+        //         }
+        //     }
+        // })
     }
 
+    /** Геттер лейбла или имени поля. */
+    get labelOrName() { return this.label || this.name }
+
+    /** Геттер лейбла или имени совпадающего поля. */
+    get sameLabelOrName() { return this.sameLabel || this.same }
+
+    /**
+     * Геттер строкового типа поля.
+     * @return Boolean
+     */
+    get isStringType() {
+        return 'string' === this.type
+    }
+
+    /**
+     * Геттер числового типа поля.
+     * @return Boolean
+     */
+    get isNumberType() {
+        return ['number', 'int', 'integer', 'float'].includes(this.type)
+    }
+
+    /**
+     * Геттер булевого типа поля.
+     * @return Boolean
+     */
+    get isBooleanType() {
+        return  ['bool', 'boolean'].includes(this.type)
+    }
+
+    /**
+     * Конвертация типа значения.
+     * @param mixed значение
+     * @return mixed значение
+     */
+    convertType(value) {
+        if (this.isStringType) return value == null ? '' : String(value)
+        if (this.isNumberType) {
+            let newValue = Number(value)
+            return isNaN(newValue) ? value : newValue
+        }
+        if (this.isBooleanType) return Boolean(value)
+        throw new Error(`Field "${this._name}" has unknown type: ${this._type}`)
+    }
 }
+
+require('./Field.validate.js')
