@@ -9,7 +9,7 @@ import { Api } from './Api.js'
 import { reactive } from 'vue'
 
 export { Model } from './Model/Model.js'
-// export { MockApi } from './MockApi.js'
+export { MockApi } from './MockApi.js'
 
 export const EvasVue = new function () {
     this.models = reactive({})
@@ -26,7 +26,9 @@ export const EvasVue = new function () {
 
     this.setApi = (api) => {
         this.api = api instanceof Api ? api : new Api(api)
-        if (this.models) this.setModels(Object.values(this.models))
+        if (this.models) Object.values(this.models).forEach(model => {
+            model.setApi(this.api)
+        })
     }
 
     this.setModels = (models) => {

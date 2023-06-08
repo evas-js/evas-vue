@@ -21,7 +21,7 @@ export class Api {
             handler = handler[sub]
             if (!handler) {
                 throw new Error(
-                    `Api endpoint "${sub}" for route path "${parts.join('.')}" not found`
+                    `Api endpoint "${parts.join('.')}" not found. "${sub}" does not exists`
                 )
             }
         }
