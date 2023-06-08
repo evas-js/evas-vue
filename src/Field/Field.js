@@ -107,6 +107,7 @@ export class Field {
      * @return mixed значение
      */
     convertType(value) {
+        if (!this.required && [null, undefined].includes(value)) return null
         if (this.isStringType) return value == null ? '' : String(value)
         if (this.isNumberType) {
             let newValue = Number(value)
