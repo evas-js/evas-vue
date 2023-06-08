@@ -30,9 +30,7 @@ Model._processUpdate = function (entity, afterFetch = false) {
  */
 Model.insertOrUpdate = function (entity, afterFetch = false) {
     if (Array.isArray(entity)) {
-        return entity.map((_entity) =>
-            this.insertOrUpdate(_entity, afterFetch)
-        )
+        return entity.map((_entity) => this.insertOrUpdate(_entity, afterFetch))
     } else if (entity && entity instanceof this) {
         if (entity.$id) this._processUpdate(entity, afterFetch)
         else this._processInsert(entity, afterFetch)
@@ -99,7 +97,7 @@ Model.delete = function (entity, cb, afterFetch = false) {
         return this.delete(entity.$id, cb, afterFetch)
     }
     if (entity && 'object' === typeof entity) {
-        return new this(entity).$delete()
+        return (new this(entity)).$delete()
     }
     if (entity && ('number' === typeof entity || 'string' === typeof entity)) {
         this.map.delete(entity)
@@ -123,20 +121,20 @@ Model.prototype.$save = function (cb) {
     if (!this.$isDirty) return
 
     if (this.$isNew) {
-        this.beforeInsert()
-        if (this.validate()) {
+        this.$beforeInsert()
+        if (this.$validate()) {
             if (this.constructor.useApi) this.constructor.fetchInsert(this.$dirtyData, cb)
             else this.$saveState()
-            this.afterInsert()
+            this.$afterInsert()
         }
     } else {
-        this.beforeUpdate()
-        if (this.validate()) {
+        this.$beforeUpdate()
+        if (this.$validate()) {
             if (this.constructor.useApi) this.constructor.fetchUpdate(
                 { id: this.$id, ...this.$dirtyData }, cb
             )
             else this.$saveState()
-            this.afterUpdate()
+            this.$afterUpdate()
         }
     }
 }
@@ -146,17 +144,17 @@ Model.prototype.$save = function (cb) {
  * @param Function колбэк после удаления
  */
 Model.prototype.$delete = function (cb) {
-    this.beforeDelete()
+    this.$beforeDelete()
     if (this.constructor.useApi) this.constructor.delete(this, cb)
     else this.$saveState()
-    this.afterDelete()
+    this.$afterDelete()
 }
 
 // instance mutation hooks
-beforeInsert() {}
-afterInsert() {}
-beforeUpdate() {}
-afterUpdate() {}
-beforeDelete() {}
-afterDelete() {}
+Model.prototype.$beforeInsert = function () {}
+Model.prototype.$afterInsert = function () {}
+Model.prototype.$beforeUpdate = function () {}
+Model.prototype.$afterUpdate = function () {}
+Model.prototype.$beforeDelete = function () {}
+Model.prototype.$afterDelete = function () {}
 
