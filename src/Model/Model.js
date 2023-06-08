@@ -44,7 +44,7 @@ Model.prototype.$fill = function (data) {
     this.constructor.eachFields((field) => {
         this[field.name] = field.convertType(undefined !== data[field.name]
             ? data[field.name]
-            : field.default)
+            : field.getDefault())
     })
     this.constructor.eachRelations((field) => {
         this[field.name] = undefined !== data[field.name]

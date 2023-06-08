@@ -116,6 +116,14 @@ export class Field {
         if (this.isBooleanType) return Boolean(value)
         throw new Error(`Field "${this._name}" has unknown type: ${this._type}`)
     }
+
+    /**
+     * Получение значения по умолчанию.
+     * @return mixed
+     */
+    getDefault() {
+        return 'function' === typeof this.default ? this.default() : this.default
+    }
 }
 
 require('./Field.validate.js')
