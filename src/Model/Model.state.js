@@ -19,7 +19,7 @@ Model.prototype.$saveState = function () {
  * @param Array|null имена полей и/или связей
  */
 Model.prototype.$rollbackChanges = function (names) {
-    const cb = field => {this[field._name] = structuredClone(this.$state[field._name])}
+    const cb = field => {this[field.name] = structuredClone(this.$state[field.name])}
     this.constructor.eachFields(cb, names)
     this.constructor.eachRelations(cb, names)
 }
@@ -54,8 +54,8 @@ Model.prototype.$isDirtyField = function (name) {
  */
 Model.prototype.$isDirtyRelateds = function (name) {
     let relation = name instanceof Relation ? name : this.relation()[name]
-    return this.$state[relation._name]?.[relation.foreign] 
-    !== this[relation._name]?.[relation.foreign]
+    return this.$state[relation.name]?.[relation.foreign] 
+    !== this[relation.name]?.[relation.foreign]
 }
 
 /**
@@ -66,29 +66,29 @@ Model.prototype.$isDirtyRelateds = function (name) {
 Model.prototype.$dirtyFields = function (names) {
     let dirty = []
     this.constructor.eachFields((field) => {
-        if (this.$isDirtyField(field._name)) {
+        if (this.$isDirtyField(field.name)) {
             // console.log(
             //     'cb',
-            //     field._name,
-            //     this.isDirtyField(field._name),
-            //     this.$state[field._name]
+            //     field.name,
+            //     this.isDirtyField(field.name),
+            //     this.$state[field.name]
             // )
-            dirty.push(field._name)
+            dirty.push(field.name)
         }
     }, names)
     this.constructor.eachRelations((relation) => {
-        // if (this.isDirtyField(relation._name)) {
+        // if (this.isDirtyField(relation.name)) {
         if (this.$isDirtyRelateds(relation)) {
             // console.log(
             //     'cb-r',
-            //     relation._name,
-            //     // this.isDirtyField(relation._name),
-            //     // this.$state[relation._name]
+            //     relation.name,
+            //     // this.isDirtyField(relation.name),
+            //     // this.$state[relation.name]
             //     relation,
-            //     this.$state[relation._name]?.[relation.foreign],
-            //     this[relation._name]?.[relation.foreign]
+            //     this.$state[relation.name]?.[relation.foreign],
+            //     this[relation.name]?.[relation.foreign]
             // )
-            dirty.push(relation._name)
+            dirty.push(relation.name)
         }
     }, names)
     return dirty
