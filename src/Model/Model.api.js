@@ -119,11 +119,7 @@ Model.fetchDelete = function (args, cb) {
     return logger.methodCall(
         `${this.entityName}.fetchDelete`,
         arguments,
-        () => this.apiRoute('delete', args, (data) => {
-            console.log('fetched api data:', data)
-            if (cb) cb(data)
-            // this.afterFetch()
-        })
+        () => this.apiRouteWithSave('delete', args, cb)
     )
 }
 
