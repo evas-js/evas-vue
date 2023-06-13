@@ -62,7 +62,13 @@ export class FieldBuilder {
         return this
     }
     options(value) {
-        if (!value || !(Array.isArray(value) || 'object' === typeof value)) {
+        if (!value) {
+            return console.error('Options not setting')
+        }
+        if (['string', 'number'].includes(typeof value)) {
+            value = arguments
+        }
+        if (!(Array.isArray(value) || 'object' === typeof value)) {
             return console.error(
                 `Options of the field ${this._name} must be an array or an object,`,
                 `${typeof value} given`, 
