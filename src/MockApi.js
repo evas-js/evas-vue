@@ -19,6 +19,8 @@
 //     })
 // })
 
+import { logger } from './Log.js'
+
 
 function Exception(message, code = 200){
     this.message = message
@@ -74,10 +76,6 @@ export class MockApi {
         return mock
     }
 
-    log(...message) {
-        if (this.debug) console.log('EVC MockApi:', ...message)
-    }
-
     // response
     err400(message) { throw new Exception(message, 400) }
     err401(message) { throw new Exception(message, 401) }
@@ -110,7 +108,8 @@ export class MockApi {
     insert(name, args) {
         try {
             let rows = this.getMock(name, args)
-            this.log(`${name}.insert`, args)
+            // this.log(`${name}.insert`, args)
+            logger.methodCall('MockApi.insert', arguments)
             if (!args.id) {
                 args.id = rows.reduce((maxId, { id }) => isNaN(+id) || maxId < id ? id : maxId, 0)
                 if ('number' === typeof args.id) args.id++
@@ -127,7 +126,8 @@ export class MockApi {
     update(name, args) {
         try {
             let rows = this.getMock(name, args)
-            this.log(`${name}.update`, args.id, args)
+            // this.log(`${name}.update`, args.id, args)
+            logger.methodCall('MockApi.update', arguments)
             if (!args.id) this.err400('Укажите id записи')
             let row = this.findById(rows, args.id)
             for (let key in args) {
@@ -142,7 +142,8 @@ export class MockApi {
     remove(name, args) {
         try {
             let rows = this.getMock(name, args)
-            this.log(`${name}.remove`, args.id)
+            // this.log(`${name}.remove`, args.id)
+            logger.methodCall('MockApi.remove', arguments)
             if (!args.id) this.err400('Укажите id записи')
             if (!Array.isArray(rows)) rows = [rows]
             let index = this.findById(rows, args.id, true)
@@ -156,7 +157,8 @@ export class MockApi {
     one(name, args) {
         try {
             let rows = this.getMock(name, args)
-            this.log(`${name}.one`, args.id)
+            // this.log(`${name}.one`, args.id)
+            logger.methodCall('MockApi.one', arguments)
             if (!args.id) this.err400('Укажите id записи')
             let row = this.findById(rows, args.id)
             return this.send200([ [row], rows.length ])
@@ -168,7 +170,8 @@ export class MockApi {
     list(name, args) {
         try {
             let rows = this.getMock(name, args)
-            this.log(`${name}.list`, args, rows)
+            // this.log(`${name}.list`, args, rows)
+            logger.methodCall('MockApi.list', arguments)
 
             if (!args) args = {}
             if (args.filters) {

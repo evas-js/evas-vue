@@ -14,11 +14,13 @@ export { MockApi } from './MockApi.js'
 export const EvasVue = new function () {
     this.models = reactive({})
     this.api = null
+    this.debug = true
 
     this.install = (app, options) => {
         if (options) {
             if (options.api) this.setApi(options.api)
             if (options.models) this.setModels(options.models)
+            if (undefined !== options.debug) this.debug = options.debug
         }
         app.config.globalProperties.$models = this.models
         app.config.globalProperties.$api = this.api

@@ -5,6 +5,7 @@
  * @license CC-BY-4.0
  */
 
+import { logger } from '../Log.js'
 import { Model } from './Model.js'
 
 Model._processInsert = function (entity, afterFetch = false) {
@@ -124,34 +125,59 @@ Object.defineProperty(Model.prototype, '$dataToSave', {
             data = { ...alwaysSendData, ...data }
         }
         if (!this.$isNew) data[this.constructor.primary] = this.$id
-        console.log('$dataToSave', data)
+        logger.line('$dataToSave:', data)
         return data
     }
 })
+
+Model.prototype.$logModelInfo = function () {
+    logger.returnGroup(() => {
+        logger.keyValue('this.$entityName', this.$entityName)
+        logger.keyValue(`this.$id (this.${this.constructor.primary})`, this.$id)
+        logger.keyValue('this.$isDirty', this.$isDirty)
+        logger.keyValue('this.$isNew', this.$isNew)
+        logger.keyValue('this', this)
+        logger.keyValue('this.$state', this.$state)
+        logger.returnGroup(() => {
+            logger.keyValue('this.constructor.primary', this.constructor.primary)
+            logger.keyValue('this.constructor.useApi', this.constructor.useApi)
+            logger.keyValue('this.constructor.alwaysSend', this.constructor.alwaysSend)
+        }, `Model info (${this.constructor.entityName})`, )
+    }, 'Entity info')
+}
 
 /**
  * Сохранение записи.
  * @param Function колбэк после сохранения
  */
 Model.prototype.$save = function (cb) {
-    console.log('$save', this, this.$isDirty, this.$id, this.$isNew, this.constructor.useApi)
-    if (!this.$isDirty) return
+    // console.log('$save', this, this.$isDirty, this.$id, this.$isNew, this.constructor.useApi)
+    logger.methodCall(`${this.$entityName}{${this.$id}}.$save`, arguments, () => {
+        this.$logModelInfo()
+        if (!this.$isDirty) {
+            logger.line('Nothing to save. End save')
+            return 
+        }
 
-    if (this.$isNew) {
-        this.$beforeInsert()
-        if (this.$validate()) {
-            if (this.constructor.useApi) this.constructor.fetchInsert(this.$dataToSave, cb)
-            else this.$saveState()
-            this.$afterInsert()
+        if (this.$isNew) {
+            this.$beforeInsert()
+            if (this.$validate()) {
+                if (this.constructor.useApi) this.constructor.fetchInsert(this.$dataToSave, cb)
+                else this.$saveState()
+                logger.line('Inserted')
+                this.$afterInsert()
+            }
+        } else {
+            this.$beforeUpdate()
+            if (this.$validate()) {
+                if (this.constructor.useApi) this.constructor.fetchUpdate(this.$dataToSave, cb)
+                else this.$saveState()
+                logger.line('Updated')
+                this.$afterUpdate()
+            }
         }
-    } else {
-        this.$beforeUpdate()
-        if (this.$validate()) {
-            if (this.constructor.useApi) this.constructor.fetchUpdate(this.$dataToSave, cb)
-            else this.$saveState()
-            this.$afterUpdate()
-        }
-    }
+        logger.line('End save')
+    })
 }
 
 /**
@@ -160,8 +186,11 @@ Model.prototype.$save = function (cb) {
  */
 Model.prototype.$delete = function (cb) {
     this.$beforeDelete()
-    if (this.constructor.useApi) this.constructor.delete(this, cb)
-    else this.$saveState()
+    logger.methodCall(`${this.$entityName}{${this.$id}}.$delete`, arguments, () => {
+        this.$logModelInfo()
+        if (this.constructor.useApi) this.constructor.delete(this, cb)
+        else this.$saveState()
+    })
     this.$afterDelete()
 }
 

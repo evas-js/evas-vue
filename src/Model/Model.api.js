@@ -7,6 +7,7 @@
 
 import { Api } from '../Api.js'
 import { EvasVue } from '../index.js'
+import { logger } from '../Log.js'
 import { Model } from './Model.js'
 
 Model.api
@@ -18,10 +19,10 @@ Model.setApi = function (api) {
 
 Model.getApiRoute = function (name) {
     if (!this.routes) {
-        throw new Error(`Model ${this.entityName} routes does not exists`)
+        throw new Error(`${this.entityName} routes does not exists`)
     }
     if (!this.routes[name]) {
-        throw new Error(`Model ${this.entityName} not has route ${name}`)
+        throw new Error(`${this.entityName} not has route ${name}`)
     }
     if (!this.api) {
         throw new Error(
@@ -53,18 +54,21 @@ Model.apiRouteWithSave = function (name, args, cb) {
         // console.log(name, 'fetched api data:', data)
         if (data) {
             if (data.$data) {
-                data.$data.forEach((sub) => {
-                    let type = sub.type || this.entityName
-                    let model = EvasVue.getModel(type)
-                    if (!model) {
-                        console.error(`Model ${type} not found`)
-                        return
-                    }
-                    this.beforeSubFetched(type, sub)
-                    let entities = model.insertOrUpdate(sub.rows, true)
-                    if (sub.totalRows) model.totalRows = sub.totalRows
-                    if (cb) cb(sub, entities, res)
-                    this.afterSubFetched(type, entities)
+                logger.methodCall(`${this.entityName}.apiRouteWithSave() api data fetched`, [data, res], () => {
+                    // logger.line()
+                    data.$data.forEach((sub) => {
+                        let type = sub.type || this.entityName
+                        let model = EvasVue.getModel(type)
+                        if (!model) {
+                            console.error(`Model ${type} not found`)
+                            return
+                        }
+                        this.beforeSubFetched(type, sub)
+                        let entities = model.insertOrUpdate(sub.rows, true)
+                        if (sub.totalRows) model.totalRows = sub.totalRows
+                        if (cb) cb(sub, entities, res)
+                        this.afterSubFetched(type, entities)
+                    })
                 })
             } else {
                 let entities = this.insertOrUpdate(data, true)
@@ -80,28 +84,47 @@ Model.fetch = function (name, args, cb) {
 }
 
 Model.fetchList = function (args, cb) {
-    return this.apiRouteWithSave('list', args, cb)
+    return logger.methodCall(
+        `${this.entityName}.fetchList`,
+        arguments,
+        () => this.apiRouteWithSave('list', args, cb)
+    )
 }
 
 Model.fetchOne = function (args, cb) {
-    return this.apiRouteWithSave('one', args, cb)
+    return logger.methodCall(
+        `${this.entityName}.fetchOne`,
+        arguments,
+        () => this.apiRouteWithSave('one', args, cb)
+    )
 }
 
 Model.fetchInsert = function (args, cb) {
-    return this.apiRouteWithSave('insert', args, cb)
+    return logger.methodCall(
+        `${this.entityName}.fetchInsert`,
+        arguments,
+        () => this.apiRouteWithSave('insert', args, cb)
+    )
 }
 
 Model.fetchUpdate = function (args, cb) {
-    return this.apiRouteWithSave('update', args, cb)
+    return logger.methodCall(
+        `${this.entityName}.fetchUpdate`,
+        arguments,
+        () => this.apiRouteWithSave('update', args, cb)
+    )
 }
 
 Model.fetchDelete = function (args, cb) {
-    // return this.apiRouteWithSave('delete', args, cb)
-    return this.apiRoute('delete', args, (data) => {
-        console.log('fetched api data:', data)
-        if (cb) cb(data)
-        // this.afterFetch()
-    })
+    return logger.methodCall(
+        `${this.entityName}.fetchDelete`,
+        arguments,
+        () => this.apiRoute('delete', args, (data) => {
+            console.log('fetched api data:', data)
+            if (cb) cb(data)
+            // this.afterFetch()
+        })
+    )
 }
 
 // api hooks

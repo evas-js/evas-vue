@@ -5,11 +5,12 @@
  * @license CC-BY-4.0
  */
 
+import { logger } from '../Log.js'
 import { Query } from '../Query.js'
 
 export class Model {
     constructor (data, afterFetch = true) {
-        console.log('constructor', data)
+        logger.methodCall(`new ${this.$entityName}`, data)
         this.$beforeNew(data, afterFetch)
         if (!data) data = {}
         this.$fill(data)
@@ -21,6 +22,11 @@ export class Model {
 
     static entityName = null
     static primary = 'id'
+
+
+    get $entityName() {
+        return this.constructor.entityName
+    }
 }
 
 Model.isRootModel = function () {

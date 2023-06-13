@@ -5,6 +5,8 @@
  * @license CC-BY-4.0
  */
 
+import { logger } from './Log.js'
+
 export class Api {
     endpoints
     errorCb
@@ -30,7 +32,8 @@ export class Api {
 
     call(parts, args, cb) {
         this.beforeCall(parts, args, cb)
-        console.log('Api.call(', parts, ')')
+        logger.methodCall('Api.call', arguments)
+        // console.log('evas-vue Api.call(', parts, ')')
         this.endpoint(parts)(args, (data, res) => {
             if (cb) cb(data, res)
             else console.log('Api.call(', parts, ') response:', data, res)
