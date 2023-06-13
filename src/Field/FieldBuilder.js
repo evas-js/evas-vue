@@ -75,6 +75,9 @@ export class FieldBuilder {
                 value
             )
         }
+        if (Object.prototype.toString.call(value) === '[object Arguments]') {
+            value = Array.from(value)
+        }
         this._options = value
         return this
     }

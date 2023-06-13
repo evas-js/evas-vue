@@ -5,6 +5,7 @@
 * @license CC-BY-4.0
 */
 
+import { logger } from '../Log.js'
 import { Field } from './Field.js'
 
 /** @var array маппинг ошибок */
@@ -33,8 +34,12 @@ Field.prototype.errorsMap = {
  * @return bool false
  */
 Field.prototype.setError = function (type) {
-    this.error = this.errorsMap[type](this)
-    return false
+    return logger.methodCall(`Field{${this.name}}.setError`, arguments, () => {
+        this.error = this.errorsMap[type](this)
+        logger.keyValue('error', this.error)
+        logger.keyValue('value', this.value)
+        return false
+    })
 }
 
 /**
@@ -85,15 +90,22 @@ Field.prototype.validateRange = function (value) {
  */
 Field.prototype.validateOptions = function (value) {
     this.validateRequired(value)
-    return (this.validateRequired(value) && value && this.options && !this.options[value]) 
-    ? this.setError('options') : true
+    return (
+        this.validateRequired(value) && value && this.options && (
+            Array.isArray(this.options) 
+            ? -1 === this.options.indexOf(value)
+            : !this.options[value]
+        )
+    )  ? this.setError('options') : true
 }
 
 /**
  * @todo Валидатор паттерна значения.
  */
 Field.prototype.validatePattern = function (value) {
-    return (this.validateRequired(value)) || true
+    return (
+        this.validateRequired(value) && value && this.pattern && !this.pattern.test(value)
+    ) ? this.setError('pattern') : true
 }
 
 /**

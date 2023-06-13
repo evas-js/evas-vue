@@ -190,6 +190,7 @@ Model.prototype.$delete = function (cb) {
         this.$logModelInfo()
         if (this.constructor.useApi) this.constructor.delete(this, cb)
         else this.$saveState()
+        logger.line('End delete')
     })
     this.$afterDelete()
 }

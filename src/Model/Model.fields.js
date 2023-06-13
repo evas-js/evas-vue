@@ -52,8 +52,33 @@ Model.fieldNames = function () {
     return Object.keys(this.fields())
 }
 
+/**
+ * Получнеие поля.
+ * @param string имя поля
+ * @return Field
+ */
 Model.field = function (name) {
     return this.fields()[name]
+}
+
+/**
+ * Получнеие опций поля.
+ * @param string имя поля
+ * @return Object
+ */
+Model.fieldOptions = function (name) {
+    let options = this.field(name).options
+    if (!options) return {}
+    if (Array.isArray(options)) {
+        let res = {}
+        options.forEach(option => {
+            res[option] = option
+        })
+        return res
+    }
+    if ('object' === typeof options) {
+        return { ...options }
+    }
 }
 
 Model.eachFields = function (cb, names) {
