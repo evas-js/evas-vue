@@ -61,6 +61,10 @@ Model.field = function (name) {
     return this.fields()[name]
 }
 
+Model.prototype.$field = function (name) {
+    return this.constructor.field(name)
+}
+
 /**
  * Получнеие опций поля.
  * @param string имя поля
@@ -79,6 +83,10 @@ Model.fieldOptions = function (name) {
     if ('object' === typeof options) {
         return { ...options }
     }
+}
+
+Model.prototype.$fieldOptions = function (name) {
+    return this.constructor.fieldOptions(name)
 }
 
 Model.eachFields = function (cb, names) {
