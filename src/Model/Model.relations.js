@@ -29,7 +29,7 @@ Model.relations = function () {
 }
 
 Model.relationNames = function () {
-    return Object.keys(this.relations)
+    return Object.keys(this.relations())
 }
 
 Model.relation = function (name) {
