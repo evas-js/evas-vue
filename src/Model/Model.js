@@ -53,10 +53,12 @@ Model.prototype.$fill = function (data) {
             : field.getDefault())
     })
     this.constructor.eachRelations((field) => {
-        this[field.name] = undefined !== data[field.name]
-            ? data[field.name]
-            : field.default
-        field.foreignModel.insertOrUpdate(data[field.name], true)
+        if (undefined !== data[field.name]) {
+            this[field.name] = data[field.name]
+            field.foreignModel.insertOrUpdate(data[field.name], true)
+        } else {
+            // this[field.name] = field.default
+        }
     })
 }
 
