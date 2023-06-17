@@ -6,14 +6,27 @@
  */
 
 export class Relation {
+    /** @var String имя связи */
     name
+    /** @var String тип связи (belongsTo, hasOne, hasMany, hasManyList, manyToMany) */
     type
+    /** @var Model локальная модель */
     model
+    /** @var String локальный ключ */
     local
+    /** @var Model внешняя модель */
     foreignModel
+    /** @var String внешний ключ */
     foreign
+    /** @var Object вложенная связь */
     link
+    /** @var Boolean связь ко многим или к одной записи */
+    multiple
 
+    /**
+     * @param String тип связи
+     * @param Object свойства связи
+     */
     constructor(type, props) {
         for (let key in props) this[key] = props[key]
         this.type = type
@@ -28,13 +41,15 @@ export class Relation {
                 ? this.generateKey(this.foreignModel)
                 : this.generateKey(this.model, true)
         }
-    }
-    
-    setDefaults() {
-
         this.multiple = !['belongsTo', 'hasOne'].includes(type)
     }
 
+    /**
+     * Генерация ключа, используется если не передан явно.
+     * @param Model модель
+     * @param Boolean генерировать ли ключ вместе с именем модели
+     * @return String сгенерированный ключ
+     */
     generateKey(model, full = false) {
         let p = model.primary
         return full ? `${model.entityName.toLowerCase()}_${p}` : p
