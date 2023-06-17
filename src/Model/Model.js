@@ -10,19 +10,19 @@ import { Query } from '../Query.js'
 
 export class Model {
     constructor (data, afterFetch = true) {
-        logger.methodCall(`new ${this.$entityName}`, data)
-        this.$beforeNew(data, afterFetch)
-        if (!data) data = {}
-        this.$fill(data)
-        if (!afterFetch || this.$id) {
-            this.constructor.insertOrUpdate(this, afterFetch)
-        }
-        return new Proxy(this, this)
+        return logger.methodCall(`new ${this.$entityName}`, arguments, () => {
+            this.$beforeNew(data, afterFetch)
+            if (!data) data = {}
+            this.$fill(data)
+            if (!afterFetch || this.$id) {
+                this.constructor.insertOrUpdate(this, afterFetch)
+            }
+            return new Proxy(this, this)
+        })
     }
 
     static entityName = null
     static primary = 'id'
-
 
     get $entityName() {
         return this.constructor.entityName
@@ -47,18 +47,27 @@ Object.defineProperty(Model.prototype, '$id', {
 })
 
 Model.prototype.$fill = function (data) {
-    this.constructor.eachFields((field) => {
-        this[field.name] = field.convertType(undefined !== data[field.name]
-            ? data[field.name]
-            : field.getDefault())
-    })
-    this.constructor.eachRelations((field) => {
-        if (undefined !== data[field.name]) {
-            this[field.name] = data[field.name]
-            field.foreignModel.insertOrUpdate(data[field.name], true)
-        } else {
-            // this[field.name] = field.default
-        }
+    let id = this.$id || data[this.constructor.primary]
+    logger.methodCall(`${this.$entityName}{${id}}.$fill`, arguments, () => {
+        logger.returnGroup(() => {
+            this.constructor.eachFields((field) => {
+                this[field.name] = field.convertType(undefined !== data[field.name]
+                    ? data[field.name]
+                    : field.getDefault())
+                logger.keyValue(`${this.$entityName}{${this.$id}}.${field.name}`, this[field.name])
+            })
+        }, 'fill in the fields')
+        logger.returnGroup(() => {
+            this.constructor.eachRelations((field) => {
+                if (undefined !== data[field.name]) {
+                    this[field.name] = data[field.name]
+                    field.foreignModel.insertOrUpdate(data[field.name], true)
+                    logger.keyValue(`${this.$entityName}{${this.$id}}.${field.name}`, this[field.name])
+                } else {
+                    // this[field.name] = field.default
+                }
+            })
+        }, 'fill in the relations')
     })
 }
 

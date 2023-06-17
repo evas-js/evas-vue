@@ -5,6 +5,7 @@
  * @license CC-BY-4.0
  */
 
+import { logger } from '../Log.js'
 import { Model } from './Model.js'
 
 /** @var Function обработчик ошибок валидации */
@@ -41,14 +42,16 @@ Model.prototype.$errors = []
  * Валидация записи.
  */
 Model.prototype.$validate = function () {
-    this.$errors = []
-    this.constructor.eachFields((field) => {
-        if (!field.isValid(this[field.name])) {
-            this.constructor.handleValidateError(field, field.error)
-            this.$errors.push(field.error)
-        }
-    }, this.$dirtyFields())
-    return this.$errors.length < 1
+    return logger.methodCall(`${this.$entityName}{${this.$id}}.$validate`, arguments, () => {
+        this.$errors = []
+        this.constructor.eachFields((field) => {
+            if (!field.isValid(this[field.name])) {
+                this.constructor.handleValidateError(field, field.error)
+                this.$errors.push(field.error)
+            }
+        }, this.$dirtyFields())
+        return this.$errors.length < 1
+    })
 }
 
 /**

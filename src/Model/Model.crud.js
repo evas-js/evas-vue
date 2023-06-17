@@ -139,9 +139,11 @@ Model.prototype.$logModelInfo = function () {
         logger.keyValue('this', this)
         logger.keyValue('this.$state', this.$state)
         logger.returnGroup(() => {
-            logger.keyValue('this.constructor.primary', this.constructor.primary)
-            logger.keyValue('this.constructor.useApi', this.constructor.useApi)
-            logger.keyValue('this.constructor.alwaysSend', this.constructor.alwaysSend)
+            logger.keyValue(`${this.constructor.entityName}.fieldNames()`, this.constructor.fieldNames())
+            logger.keyValue(`${this.constructor.entityName}.primary`, this.constructor.primary)
+            logger.keyValue(`${this.constructor.entityName}.alwaysSend`, this.constructor.alwaysSend)
+            logger.keyValue(`${this.constructor.entityName}.relationNames()`, this.constructor.relationNames())
+            logger.keyValue(`${this.constructor.entityName}.useApi`, this.constructor.useApi)
         }, `Model info (${this.constructor.entityName})`, )
     }, 'Entity info')
 }

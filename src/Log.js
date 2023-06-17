@@ -61,7 +61,7 @@ export const logger = new class {
         ]
         if ('function' === typeof cb) {
             templ.push(')')
-            this.returnGroup(() => {
+            return this.returnGroup(() => {
                 this.arguments(args)
                 return cb()
             }, ...templ)

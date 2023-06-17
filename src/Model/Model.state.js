@@ -5,6 +5,7 @@
  * @license CC-BY-4.0
  */
 
+import { logger } from '../Log.js'
 import { Model } from './Model.js'
 import { Relation } from '../Relation.js'
 
@@ -12,6 +13,7 @@ Model.prototype.$state = {}
 
 Model.prototype.$saveState = function () {
     this.$state = structuredClone(this)
+    logger.methodCall(`${this.entityName}.$saveState`, arguments)
 }
 
 /**
@@ -49,7 +51,7 @@ Model.prototype.$isDirtyField = function (name) {
 
 /**
  * Проверка связанных записей на изменённость.
- * @param String|Number имя поля
+ * @param String|Number|Relation имя связи или связь
  * @return Boolean
  */
 Model.prototype.$isDirtyRelateds = function (name) {

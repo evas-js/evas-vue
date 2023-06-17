@@ -47,36 +47,38 @@ Model.hasApiRoute = function (name) {
     return true
 }
 
+Model.apiDataFetched = function (data, res, name, cb) {
+    this.beforeFetched(name, data, res)
+    // console.log(name, 'fetched api data:', data)
+    if (data) {
+        if (data.$data) {
+            logger.methodCall(`${this.entityName}.apiDataFetched()`, arguments, () => {
+                // logger.line()
+                data.$data.forEach((sub) => {
+                    let type = sub.type || this.entityName
+                    let model = EvasVue.getModel(type)
+                    if (!model) {
+                        console.error(`Model ${type} not found`)
+                        return
+                    }
+                    this.beforeSubFetched(type, sub)
+                    let entities = model.insertOrUpdate(sub.rows, true)
+                    if (sub.totalRows) model.totalRows = sub.totalRows
+                    if (cb) cb(sub, entities, res)
+                    this.afterSubFetched(type, entities)
+                })
+            })
+        } else {
+            let entities = this.insertOrUpdate(data, true)
+            if (cb) cb(data, entities, res)
+            this.afterFetched(name, data, entities, res)
+        }
+    }
+}
+
 Model.apiRouteWithSave = function (name, args, cb) {
     if (args instanceof Model) args = Object.assign({}, args)
-    return this.apiRoute(name, args, (data, res) => {
-        this.beforeFetched(name, data, res)
-        // console.log(name, 'fetched api data:', data)
-        if (data) {
-            if (data.$data) {
-                logger.methodCall(`${this.entityName}.apiRouteWithSave() api data fetched`, [data, res], () => {
-                    // logger.line()
-                    data.$data.forEach((sub) => {
-                        let type = sub.type || this.entityName
-                        let model = EvasVue.getModel(type)
-                        if (!model) {
-                            console.error(`Model ${type} not found`)
-                            return
-                        }
-                        this.beforeSubFetched(type, sub)
-                        let entities = model.insertOrUpdate(sub.rows, true)
-                        if (sub.totalRows) model.totalRows = sub.totalRows
-                        if (cb) cb(sub, entities, res)
-                        this.afterSubFetched(type, entities)
-                    })
-                })
-            } else {
-                let entities = this.insertOrUpdate(data, true)
-                if (cb) cb(data, entities, res)
-                this.afterFetched(name, data, entities, res)
-            }
-        }
-    })
+    return this.apiRoute(name, args, (data, res) => this.apiDataFetched(data, res, name, cb))
 }
 
 Model.fetch = function (name, args, cb) {
