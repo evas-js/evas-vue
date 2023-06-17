@@ -237,7 +237,7 @@ export const Query = class {
             // let relations = this.model.getRelations()
             rows.forEach((row) => {
                 this._relations.forEach((relationName) => {
-                    let relation = this.model.getRelation(relationName)
+                    let relation = this.model.relation(relationName)
 
                     if (!relation) {
                         console.error(
