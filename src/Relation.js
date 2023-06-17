@@ -32,6 +32,7 @@ export class Relation {
     
     setDefaults() {
 
+        this.multiple = !['belongsTo', 'hasOne'].includes(type)
     }
 
     generateKey(model, full = false) {
