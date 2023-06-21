@@ -13,7 +13,7 @@ export class FieldBuilder {
     /** @var Boolean обязательность значения */
     _required = true
     /** @var String тип */
-    _type = 'string'
+    _type
     /** @var Number минимальное значение или длина */
     _min = 0
     /** @var Number максимальное значение или длина */
