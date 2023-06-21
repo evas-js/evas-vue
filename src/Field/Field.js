@@ -15,7 +15,7 @@ export class Field {
     /** @var Boolean обязательность значения */
     required = true
     /** @var String тип */
-    type = 'string'
+    type
     /** @var Number минимальное значение или длина */
     min = 0
     /** @var Number максимальное значение или длина */
@@ -114,7 +114,8 @@ export class Field {
             return isNaN(newValue) ? value : newValue
         }
         if (this.isBooleanType) return Boolean(value)
-        throw new Error(`Field "${this._name}" has unknown type: ${this._type}`)
+        // throw new Error(`Field "${this._name}" has unknown type: ${this._type}`)
+        return value
     }
 
     /**
