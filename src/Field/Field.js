@@ -40,14 +40,11 @@ export class Field {
      * @param object|null свойства поля
      */
     constructor(props) {
-        // if (props) for (let key in props) this[key] = props[key]
         if (props) {
             if (props instanceof FieldBuilder) {
                 props = props.export()
             }
             if ('object' === typeof props && !Array.isArray(props)) for (let key in props) {
-                // let func = this[key]
-                // if (func) func.call(this, props[key])
                 this[key] = props[key]
             }
             else {
@@ -58,17 +55,6 @@ export class Field {
                 )
             }
         }
-
-        // return new Proxy(this, {
-        //     // get: function (self, key) {
-        //     get: function (self, key) {
-        //         // if (key in self) return self[key]
-        //         return function () {
-        //             console.log(key, arguments)
-        //             return this
-        //         }
-        //     }
-        // })
     }
 
     /** Геттер лейбла или имени поля. */
