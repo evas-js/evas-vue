@@ -32,11 +32,6 @@ Model.getApiRoute = function (name) {
     return this.routes[name]
 }
 
-Model.apiRoute = function (name, args, cb) {
-    let parts = this.getApiRoute(name)
-    return this.api.call(parts, args, (data, res) => cb(data, res))
-}
-
 Model.hasApiRoute = function (name) {
     try {
         this.getApiRoute(name)
@@ -47,6 +42,14 @@ Model.hasApiRoute = function (name) {
     return true
 }
 
+
+/**
+ * Обработка данных полученных через fetch.
+ * @param mixed данные
+ * @param Response
+ * @param String имя вызванного метода
+ * @param Function колбэк
+ */
 Model.apiDataFetched = function (data, res, name, cb) {
     this.beforeFetched(name, data, res)
     // console.log(name, 'fetched api data:', data)
@@ -76,20 +79,45 @@ Model.apiDataFetched = function (data, res, name, cb) {
     }
 }
 
-Model.apiRouteWithSave = function (name, args, cb) {
-    if (args instanceof Model) args = Object.assign({}, args)
-    return this.apiRoute(name, args, (data, res) => this.apiDataFetched(data, res, name, cb))
+
+// Вызов api-эндпоинта
+
+
+/**
+ * Вызов api-эндпоинта без сохранения разультата.
+ * @param Array|String имя эндпоинта
+ * @param mixed аргументы вызова
+ * @param Function колбэк
+ */
+Model.callApiRoute = function (name, args, cb) {
+    let parts = this.getApiRoute(name)
+    return this.api.call(parts, args, (data, res) => cb(data, res))
 }
 
+/**
+ * Вызов api-эндпоинта с сохранением результатов запроса.
+ * @param Array|String имя эндпоинта
+ * @param mixed аргументы вызова
+ * @param Function колбэк
+ */
 Model.fetch = function (name, args, cb) {
-    return this.apiRouteWithSave(name, args, cb)
+    if (!this.api) {
+        return logger.line(`Api not enabled for model "${this.entityName}"`)
+    }
+    if (args instanceof Model) args = Object.assign({}, args)
+    return this.callApiRoute(
+        name, args, (data, res) => this.apiDataFetched(data, res, name, cb)
+    )
 }
+
+
+// Вызов CRUD api-эндпоинта.
 
 Model.fetchList = function (args, cb) {
     return logger.methodCall(
         `${this.entityName}.fetchList`,
         arguments,
-        () => this.apiRouteWithSave('list', args, cb)
+        () => this.fetch('list', args, cb)
     )
 }
 
@@ -97,7 +125,7 @@ Model.fetchOne = function (args, cb) {
     return logger.methodCall(
         `${this.entityName}.fetchOne`,
         arguments,
-        () => this.apiRouteWithSave('one', args, cb)
+        () => this.fetch('one', args, cb)
     )
 }
 
@@ -105,7 +133,7 @@ Model.fetchInsert = function (args, cb) {
     return logger.methodCall(
         `${this.entityName}.fetchInsert`,
         arguments,
-        () => this.apiRouteWithSave('insert', args, cb)
+        () => this.fetch('insert', args, cb)
     )
 }
 
@@ -113,7 +141,7 @@ Model.fetchUpdate = function (args, cb) {
     return logger.methodCall(
         `${this.entityName}.fetchUpdate`,
         arguments,
-        () => this.apiRouteWithSave('update', args, cb)
+        () => this.fetch('update', args, cb)
     )
 }
 
@@ -121,11 +149,13 @@ Model.fetchDelete = function (args, cb) {
     return logger.methodCall(
         `${this.entityName}.fetchDelete`,
         arguments,
-        () => this.apiRouteWithSave('delete', args, cb)
+        () => this.fetch('delete', args, cb)
     )
 }
 
-// api hooks
+
+// Model api hooks
+
 Model.beforeFetched = function () {}
 Model.afterFetched = function () {}
 Model.beforeSubFetched = function () {}
