@@ -50,7 +50,7 @@ Field.prototype.setError = function (type) {
 Field.prototype.validateRequired = function (value) {
     this.error = null
     this.value = value
-    return (this.required && (!value))  ? this.setError('required') : true
+    return (this.required && [null, undefined, ''].includes(value))  ? this.setError('required') : true
 }
 
 /**
