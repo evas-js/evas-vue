@@ -5,6 +5,7 @@
  * @license CC-BY-4.0
  */
 
+import { logger } from '../Log.js'
 import { Model } from './Model.js'
 import { ModelsStore } from '../ModelsStore.js'
 
@@ -40,6 +41,19 @@ Model.all = function () {
 Model.each = function (cb) {
     if (!cb) return
     this.map.forEach((entity) => cb(entity))
+}
+
+/**
+ * Очистка записей модли в хранилище.
+ * @return this
+ */
+Model.clear = function () {
+    logger.methodCall(`${this.entityName}.clear`, arguments, () => {
+        logger.keyValue(`before ${this.entityName}.size`, this.size())
+        this.map.clear()
+        logger.keyValue(`after ${this.entityName}.size`, this.size())
+    })
+    return this
 }
 
 // total rows
