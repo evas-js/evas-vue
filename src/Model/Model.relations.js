@@ -41,9 +41,7 @@ Model.eachRelations = function (cb, names) {
     for (let name of names) {
         let field = this.relation(name)
         if (!field) {
-            throw new Error(
-                `Relation field "${name}" not registered in model "${this.$name}"`
-            )
+            console.warn(`Relation field "${name}" not registered in model "${this.$name}"`)
         }
         if (cb.apply(this, [field, name])) return true
     }
