@@ -94,9 +94,7 @@ Model.eachFields = function (cb, names) {
     for (let name of names) {
         let field = this.field(name)
         if (!field) {
-            console.error(
-                `Field "${name}" not registered in model "${this.name}"`
-            )
+            console.warn(`Field "${name}" not registered in model "${this.name}"`)
             continue
         }
         if (cb.apply(this, [field, name])) return true
