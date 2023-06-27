@@ -39,11 +39,18 @@ Model.handleValidateError = function (field, error) {
 Model.prototype.$errors = []
 
 /**
+ * Очистка ошибок крайней валидации.
+ */
+Model.prototype.$clearErrors = function () {
+    this.$errors = []
+}
+
+/**
  * Валидация записи.
  */
 Model.prototype.$validate = function () {
     return logger.methodCall(`${this.$entityName}{${this.$id}}.$validate`, arguments, () => {
-        this.$errors = []
+        this.$clearErrors()
         this.constructor.eachFields((field) => {
             if (!field.isValid(this[field.name])) {
                 this.constructor.handleValidateError(field, field.error)
