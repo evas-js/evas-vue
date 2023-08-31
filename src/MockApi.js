@@ -108,7 +108,6 @@ export class MockApi {
     insert(name, args) {
         try {
             let rows = this.getMock(name, args)
-            // this.log(`${name}.insert`, args)
             logger.methodCall('MockApi.insert', arguments)
             if (!args.id) {
                 args.id = rows.reduce((maxId, { id }) => isNaN(+id) || maxId < id ? id : maxId, 0)
@@ -126,7 +125,6 @@ export class MockApi {
     update(name, args) {
         try {
             let rows = this.getMock(name, args)
-            // this.log(`${name}.update`, args.id, args)
             logger.methodCall('MockApi.update', arguments)
             if (!args.id) this.err400('Укажите id записи')
             let row = this.findById(rows, args.id)
@@ -139,11 +137,10 @@ export class MockApi {
         }
     }
 
-    remove(name, args) {
+    delete(name, args) {
         try {
             let rows = this.getMock(name, args)
-            // this.log(`${name}.remove`, args.id)
-            logger.methodCall('MockApi.remove', arguments)
+            logger.methodCall('MockApi.delete', arguments)
             if (!args.id) this.err400('Укажите id записи')
             if (!Array.isArray(rows)) rows = [rows]
             let index = this.findById(rows, args.id, true)
@@ -157,7 +154,6 @@ export class MockApi {
     one(name, args) {
         try {
             let rows = this.getMock(name, args)
-            // this.log(`${name}.one`, args.id)
             logger.methodCall('MockApi.one', arguments)
             if (!args.id) this.err400('Укажите id записи')
             let row = this.findById(rows, args.id)
@@ -170,7 +166,6 @@ export class MockApi {
     list(name, args) {
         try {
             let rows = this.getMock(name, args)
-            // this.log(`${name}.list`, args, rows)
             logger.methodCall('MockApi.list', arguments)
 
             if (!args) args = {}
