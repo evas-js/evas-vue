@@ -46,29 +46,46 @@ Object.defineProperty(Model.prototype, '$id', {
     }
 })
 
+/**
+ * Заполнение свойств записи.
+ * @param Object данные [имя поля/связи => значение]
+ */
 Model.prototype.$fill = function (data) {
-    let id = this.$id || data[this.constructor.primary]
+    const id = this.$id || data[this.constructor.primary]
     logger.methodCall(`${this.$entityName}{${id}}.$fill`, arguments, () => {
-        logger.returnGroup(() => {
-            this.constructor.eachFields((field) => {
-                this[field.name] = field.convertType(undefined !== data[field.name]
-                    ? data[field.name]
-                    : field.getDefault())
-                logger.keyValue(`${this.$entityName}{${this.$id}}.${field.name}`, this[field.name])
-            })
-        }, 'fill in the fields')
-        logger.returnGroup(() => {
-            this.constructor.eachRelations((field) => {
-                if (undefined !== data[field.name]) {
-                    this[field.name] = data[field.name]
-                    field.foreignModel.insertOrUpdate(data[field.name], true)
-                    logger.keyValue(`${this.$entityName}{${this.$id}}.${field.name}`, this[field.name])
-                } else {
-                    // this[field.name] = field.default
-                }
-            })
-        }, 'fill in the relations')
+        this._$fillFields(data)
+        this._$fillRelatons(data)
     })
+}
+/**
+ * Заполнение свойств-полей записи.
+ * @param Object данные [имя поля/связи => значение]
+ */
+Model.prototype._$fillFields = function (data) {
+    const id = this.$id || data[this.constructor.primary]
+    logger.returnGroup(() => {
+        this.constructor.eachFields((field) => {
+            // конвертируем тип значения
+            this[field.name] = field.convertTypeWithDefault(data[field.name])
+            logger.keyValue(`${this.$entityName}{${id}}.${field.name}`, this[field.name])
+        })
+    }, 'fill in the fields')
+}
+/**
+ * Заполнение свойств-связей записи.
+ * @param Object данные [имя поля/связи => значение]
+ */
+Model.prototype._$fillRelatons = function (data) {
+    const id = this.$id || data[this.constructor.primary]
+    logger.returnGroup(() => {
+        this.constructor.eachRelations((field) => {
+            if (undefined === data[field.name]) return
+            this[field.name] = data[field.name]
+            // записываем связанные записи в их модели
+            field.foreignModel.insertOrUpdate(data[field.name], true)
+            logger.keyValue(`${this.$entityName}{${id}}.${field.name}`, this[field.name])
+        })
+    }, 'fill in the relations')
 }
 
 // Model hooks
@@ -77,6 +94,7 @@ Model.prototype.$beforeNew = function () {}
 require('./Model.api.js')
 require('./Model.crud.js')
 require('./Model.fields.js')
+require('./Model.fields.view.js')
 require('./Model.relations.js')
 require('./Model.state.js')
 require('./Model.store.js')
@@ -88,7 +106,7 @@ Model.query = function () {
 }
 Model.find = function (id) {
     let query = this.query()
-    // if (arguments.length > 1 && !Array.isArray(id)) id = arguments
+    if (arguments.length > 1 && !Array.isArray(id)) id = Array.from(arguments)
     return Array.isArray(id)
         ? query.whereIn(this.primary, id).get()
         : query.where(this.primary, id).first()

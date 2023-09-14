@@ -26,6 +26,7 @@ Field.prototype.errorsMap = {
     pattern: (ctx) => `Проверьте правильность поля "${ctx.labelOrName}"`,
     options: (ctx) => `Значение поля "${ctx.labelOrName}" не совпадает с доступными опциями`,
     same: (ctx) => `Значения полей "${ctx.labelOrName}" и "${ctx.sameLabelOrName}" должны совпадать`,
+    type: (ctx) => `Неверный тип поля, ожидается "${ctx.expectedType}", текущий тип поля "${ctx.currentType}"`
 }
 
 /**
@@ -33,9 +34,9 @@ Field.prototype.errorsMap = {
  * @param string тип ошибки
  * @return bool false
  */
-Field.prototype.setError = function (type) {
+Field.prototype.setError = function (type, ctx = this) {
     return logger.methodCall(`Field{${this.name}}.setError`, arguments, () => {
-        this.error = this.errorsMap[type](this)
+        this.error = this.errorsMap[type](ctx)
         logger.keyValue('error', this.error)
         logger.keyValue('value', this.value)
         return false
@@ -50,7 +51,33 @@ Field.prototype.setError = function (type) {
 Field.prototype.validateRequired = function (value) {
     this.error = null
     this.value = value
-    return (this.required && [null, undefined, ''].includes(value))  ? this.setError('required') : true
+    return (this.required && (!value))  ? this.setError('required') : true
+}
+
+/**
+ * Валидации типа значения.
+ * @param mixed значение
+ * @return bool
+ */
+Field.prototype.validateType = function (value) {
+    if (this.isEmptyValue(value) && !this.required) return true
+    let expectedType = this.type
+    if (['number', 'int', 'integer', 'float'].includes(this.type)) {
+        expectedType = 'number'
+    }
+    if (['bool', 'boolean'].includes(this.type)) {
+        expectedType = 'boolean'
+    }
+
+    if (Array.isArray(value) && expectedType === 'array') {
+        return true
+    }
+    const currentType = typeof value
+    if (currentType === expectedType) {
+        return true
+    }
+    console.log(value, currentType, expectedType)
+    return this.setError('type', { currentType, expectedType })
 }
 
 /**
@@ -60,7 +87,7 @@ Field.prototype.validateRequired = function (value) {
  */
 Field.prototype.validateLength = function (value) {
     return (
-        this.isStringType && this.validateRequired(value) && value
+        this.isStringType && this.validateRequired(value) && !this.isEmptyValue(value)
         && (
             (this.min && value.length < this.min) 
             || (this.max && value.length > this.max)
@@ -75,7 +102,7 @@ Field.prototype.validateLength = function (value) {
  */
 Field.prototype.validateRange = function (value) {
     return (
-        this.isNumberType && this.validateRequired(value) && value
+        this.isNumberType && this.validateRequired(value) && !this.isEmptyValue(value)
         && (
             (this.min && value < this.min) 
             || (this.max && value > this.max)
@@ -127,7 +154,8 @@ Field.prototype.validateSame = function (value, values) {
 Field.prototype.isValid = function (value, values) {
     this.error = null
     value = this.convertType(value)
-    return this.validateRequired(value) 
+    return this.validateRequired(value)
+    && this.validateType(value)
     && this.validateLength(value) 
     && this.validateRange(value) 
     && this.validateOptions(value)

@@ -9,8 +9,8 @@ import { Api } from './Api.js'
 import { logger } from './Log.js'
 import { reactive } from 'vue'
 
-export { Model } from './Model/Model.js'
 export { MockApi } from './MockApi.js'
+export { Model } from './Model/Model.js'
 
 export const EvasVue = new function () {
     this.models = reactive({})

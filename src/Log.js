@@ -53,14 +53,13 @@ export const logger = new class {
 
     methodCall(name, args, cb) {
         let templ = [
-            '%cevas-vue %c%s%c(', 
+            '%cevas-vue %c%s()%c', 
             'color: #7f9adc',
-            'color: yellow',
+            'color: #209761',
             name,
             ''
         ]
         if ('function' === typeof cb) {
-            templ.push(')')
             return this.returnGroup(() => {
                 this.arguments(args)
                 return cb()

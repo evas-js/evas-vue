@@ -55,7 +55,7 @@ Model.apiDataFetched = function (data, res, name, cb) {
     // console.log(name, 'fetched api data:', data)
     if (data) {
         if (data.$data) {
-            logger.methodCall(`${this.entityName}.apiDataFetched()`, arguments, () => {
+            logger.methodCall(`${this.entityName}.apiDataFetched`, arguments, () => {
                 // logger.line()
                 data.$data.forEach((sub) => {
                     let type = sub.type || this.entityName

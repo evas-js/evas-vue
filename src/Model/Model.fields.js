@@ -8,9 +8,11 @@
 import { Model } from './Model.js'
 import { Field } from '../Field/Field.js'
 import { FieldBuilder } from '../Field/FieldBuilder.js'
+import { FieldsUnion } from '../Field/FieldsUnion.js'
 
 /**
  * Установка полей модели.
+ * @return Array
  */
 Model.setFields = function () {
     return []
@@ -27,21 +29,47 @@ Model.fields = function () {
     if (this.isRootModel()) return {}
     if (!this._fields) {
         this._fields = {}
-        // this._fields = new Field
-        // console.log(this._fields.name('123').min(3).max(10))
-        let fields = this.setFields()
-        for (let name in fields) {
-            let field = fields[name]
-            if (field instanceof FieldBuilder) {
-                field = new Field(field.export())
-            }
-            if (field instanceof Field) {
-                field.name = name
-                this._fields[name] = field
-            }
-        }
+        this._fields = this.buildFields(this.setFields())
     }
     return this._fields
+}
+
+/**
+ * Вспомогательный метод для установки полей.
+ */
+Model.buildFields = function (fields, name = null) {
+    let resultFields = {}
+    for (let key in fields) {
+        let field = fields[key]
+
+        if (field instanceof FieldsUnion) {
+            field.fields = this.buildFields(field.fields, key)
+        }
+
+        if (field instanceof FieldBuilder) {
+            field = new Field(field.export())
+
+            if (field.itemOf) {
+                if (field.itemOf instanceof FieldBuilder) {
+                    field.itemOf = new Field(field.itemOf.export())
+                }
+
+                if (field.itemOf instanceof FieldsUnion) {
+                    field.itemOf.fields = this.buildFields(field.itemOf.fields, key)
+                }
+
+                if (field.itemOf instanceof Field || field.itemOf instanceof FieldsUnion) {
+                    field.itemOf.name = name || key
+                }
+            }
+        }
+
+        if (field instanceof Field || field instanceof FieldsUnion) {
+            field.name = name || key
+            resultFields[key] = field
+        }
+    }
+    return resultFields
 }
 
 /**
@@ -53,7 +81,7 @@ Model.fieldNames = function () {
 }
 
 /**
- * Получнеие поля.
+ * Получение поля по имени.
  * @param string имя поля
  * @return Field
  */
@@ -66,7 +94,7 @@ Model.prototype.$field = function (name) {
 }
 
 /**
- * Получнеие опций поля.
+ * Получение опций поля.
  * @param string имя поля
  * @return Object
  */
@@ -102,7 +130,9 @@ Model.eachFields = function (cb, names) {
     return false
 }
 
-// set fields
+
+// Установка полей
+
 Model.attr = function (_default) {
     return new FieldBuilder({ _default })
 }
@@ -114,4 +144,20 @@ Model.string = function (_default) {
 }
 Model.boolean = function (_default) {
     return new FieldBuilder({ _default, _type: 'boolean' })
+}
+Model.array = function (_itemOf, _default) {
+    return new FieldBuilder({ _itemOf, _default, _type: 'array' })
+}
+
+// set variable fields
+Model.anyOf = function (fields) {
+    return new FieldsUnion('anyOf', fields)
+}
+
+Model.oneOf = function (fields) {
+    return new FieldsUnion('oneOf', fields)
+}
+
+Model.allOf = function (fields) {
+    return new FieldsUnion('allOf', fields)
 }

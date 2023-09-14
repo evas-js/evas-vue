@@ -8,10 +8,18 @@
 import { Model } from './Model.js'
 import { Relation } from '../Relation.js'
 
+/**
+ * Установка связей модели.
+ * @return Array
+ */
 Model.setRelations = function () {
     return []
 }
 
+/**
+ * Получение установленных связей модели.
+ * @return Object Relation by names
+ */
 Model.relations = function () {
     if (this.isRootModel()) return []
     if (!this._relations) {
@@ -28,10 +36,19 @@ Model.relations = function () {
     return this._relations
 }
 
+/**
+ * Получение имён свяязей модели.
+ * @return Array
+ */
 Model.relationNames = function () {
     return Object.keys(this.relations())
 }
 
+/**
+ * Получение связи по имени.
+ * @param string имя связи
+ * @return Field
+ */
 Model.relation = function (name) {
     return this.relations()[name]
 }
@@ -48,7 +65,9 @@ Model.eachRelations = function (cb, names) {
     return false
 }
 
-// set relations
+
+// Установка связей
+
 Model.belongsTo = function (model, local, foreign) {
     return new Relation('belongsTo', {
         model: this,

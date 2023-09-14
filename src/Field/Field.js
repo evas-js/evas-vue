@@ -34,6 +34,8 @@ export class Field {
     value
     /** @var String ошибка валидации */
     error
+
+    itemOf
     
     /**
      * Конструктор.
@@ -55,6 +57,17 @@ export class Field {
                 )
             }
         }
+
+        // return new Proxy(this, {
+        //     // get: function (self, key) {
+        //     get: function (self, key) {
+        //         // if (key in self) return self[key]
+        //         return function () {
+        //             console.log(key, arguments)
+        //             return this
+        //         }
+        //     }
+        // })
     }
 
     /** Геттер лейбла или имени поля. */
@@ -88,12 +101,25 @@ export class Field {
     }
 
     /**
+     * Геттер массива типа поля.
+     * @return Boolean
+     */
+    get isArrayType() {
+        return 'array' === this.type;
+    }
+
+    isEmptyValue(value) {
+        return [null, undefined].includes(arguments.length > 0 ? value : this.value)
+    }
+
+    /**
      * Конвертация типа значения.
      * @param mixed значение
      * @return mixed значение
      */
     convertType(value) {
-        if (!this.required && [null, undefined].includes(value)) return null
+        if (!this.required && this.isEmptyValue(value)) return null
+        if (this.isArrayType) return Array.isArray(value) ? Array.from(value) : value;
         if (this.isStringType) return value == null ? '' : String(value)
         if (this.isNumberType) {
             let newValue = Number(value)
@@ -101,7 +127,7 @@ export class Field {
         }
         if (this.isBooleanType) return Boolean(value)
         // throw new Error(`Field "${this._name}" has unknown type: ${this._type}`)
-        return value
+        return value;
     }
 
     /**
@@ -110,6 +136,15 @@ export class Field {
      */
     getDefault() {
         return 'function' === typeof this.default ? this.default() : this.default
+    }
+
+    /**
+     * Подучение значения конвертированного типа или дефолтного значения.
+     * @param mixed значение
+     * @return mixed значение
+     */
+    convertTypeWithDefault(value) {
+        return this.convertType(value !== undefined ? value : this.getDefault())
     }
 }
 
