@@ -26,7 +26,7 @@ Field.prototype.errorsMap = {
     pattern: (ctx) => `Проверьте правильность поля "${ctx.labelOrName}"`,
     options: (ctx) => `Значение поля "${ctx.labelOrName}" не совпадает с доступными опциями`,
     same: (ctx) => `Значения полей "${ctx.labelOrName}" и "${ctx.sameLabelOrName}" должны совпадать`,
-    type: (ctx) => `Неверный тип поля, ожидается "${ctx.expectedType}", текущий тип поля "${ctx.currentType}"`
+    type: (ctx) => `Неверный тип поля "${ctx.labelOrName}", ожидается "${ctx.expectedType}", текущий тип поля "${ctx.currentType}"`
 }
 
 /**
@@ -51,7 +51,7 @@ Field.prototype.setError = function (type, ctx = this) {
 Field.prototype.validateRequired = function (value) {
     this.error = null
     this.value = value
-    return (this.required && (!value))  ? this.setError('required') : true
+    return (this.required && this.isEmptyValue(value))  ? this.setError('required') : true
 }
 
 /**
@@ -77,7 +77,7 @@ Field.prototype.validateType = function (value) {
         return true
     }
     console.log(value, currentType, expectedType)
-    return this.setError('type', { currentType, expectedType })
+    return this.setError('type', { labelOrName: this.labelOrName, currentType, expectedType })
 }
 
 /**

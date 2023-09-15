@@ -15,7 +15,7 @@ export class FieldBuilder {
     /** @var String тип */
     _type
     /** @var Number минимальное значение или длина */
-    _min = 0
+    _min
     /** @var Number максимальное значение или длина */
     _max
     /** @var String паттерн значения */
@@ -43,8 +43,8 @@ export class FieldBuilder {
         this._required = value
         return this
     }
-    nullable(value = false) {
-        this._required = value
+    nullable(value = true) {
+        this._required = !value
         return this
     }
     type(value) {

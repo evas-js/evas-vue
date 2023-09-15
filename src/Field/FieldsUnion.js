@@ -21,8 +21,8 @@ export class FieldsUnion {
         this._required = value
         return this
     }
-    nullable(value = false) {
-        this._required = value
+    nullable(value = true) {
+        this._required = !value
         return this
     }
 

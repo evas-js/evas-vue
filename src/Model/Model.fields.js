@@ -99,7 +99,7 @@ Model.prototype.$field = function (name) {
  * @return Object
  */
 Model.fieldOptions = function (name) {
-    let options = this.field(name).options
+    let options = this.field(name)?.options
     if (!options) return {}
     if (Array.isArray(options)) {
         let res = {}

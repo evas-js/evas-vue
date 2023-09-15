@@ -48,27 +48,33 @@ Model.prototype.$clearErrors = function () {
 }
 
 /**
+ * Получение имен полей, которые поменялись и показываются.
+ */
+Model.prototype.$fieldNamesForValidate = function () {
+    const dirty = this.$dirtyFields()
+    const viewed = this.$applyFieldsDisplayRules()
+    let fieldNames = dirty.filter(fieldName => viewed.includes(fieldName))
+    // logger.keyValue('dirty', dirty)
+    // logger.keyValue('viewed', viewed)
+    // logger.keyValue('fieldNames', fieldNames)
+
+    // const registered = this.constructor.fieldNames()
+    // const viewRegistered = this.constructor.viewFieldNames()
+    // const diff = registered.filter(fieldName => !viewRegistered.includes(fieldName));
+    // fieldNames = fieldNames.concat(diff)
+    // logger.keyValue('registered', registered)
+    // logger.keyValue('viewRegistered', viewRegistered)
+    // logger.keyValue('diff', diff)
+    logger.keyValue('fieldNames', fieldNames)
+    return fieldNames
+}
+
+/**
  * Валидация записи.
  */
 Model.prototype.$validate = function (fieldNames = null) {
     return logger.methodCall(`${this.$entityName}{${this.$id}}.$validate`, arguments, () => {
-        if (!fieldNames) {
-            const dirty = this.$dirtyFields()
-            const viewed = this.$applyFieldsViewRules()
-            fieldNames = dirty.filter(fieldName => viewed.includes(fieldName))
-            // logger.keyValue('dirty', dirty)
-            // logger.keyValue('viewed', viewed)
-            // logger.keyValue('fieldNames', fieldNames)
-            
-            const registered = this.constructor.fieldNames()
-            const viewRegistered = this.constructor.viewFieldNames()
-            const diff = registered.filter(fieldName => !viewRegistered.includes(fieldName));
-            fieldNames = fieldNames.concat(diff)
-            // logger.keyValue('registered', registered)
-            // logger.keyValue('viewRegistered', viewRegistered)
-            // logger.keyValue('diff', diff)
-            logger.keyValue('fieldNames', fieldNames)
-        }
+        if (!fieldNames) fieldNames = this.$fieldNamesForValidate()
         this.$clearErrors()
         this.constructor.eachFields((field) => {
             if (!(field instanceof FieldsUnion || field instanceof Field)) return

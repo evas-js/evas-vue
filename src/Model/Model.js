@@ -94,7 +94,7 @@ Model.prototype.$beforeNew = function () {}
 require('./Model.api.js')
 require('./Model.crud.js')
 require('./Model.fields.js')
-require('./Model.fields.view.js')
+require('./Model.fields.display.js')
 require('./Model.relations.js')
 require('./Model.state.js')
 require('./Model.store.js')
@@ -105,8 +105,11 @@ Model.query = function () {
     return new Query(this)
 }
 Model.find = function (id) {
-    let query = this.query()
+    const query = this.query()
     if (arguments.length > 1 && !Array.isArray(id)) id = Array.from(arguments)
+    const field = this.field(this.primary)
+    if (Array.isArray(id)) id = id.map(sub => field.convertType(sub))
+    else id = field.convertType(id)
     return Array.isArray(id)
         ? query.whereIn(this.primary, id).get()
         : query.where(this.primary, id).first()
