@@ -1,5 +1,5 @@
 /**
- * Model state.
+ * Расширение модели поддержкой состоянием.
  * @package evas-vue
  * @author Egor Vasyakin <egor@evas-php.com>
  * @license CC-BY-4.0
@@ -11,9 +11,12 @@ import { Relation } from '../Relation.js'
 
 Model.prototype.$state = {}
 
+/**
+ * Сохранение состояния записи.
+ */
 Model.prototype.$saveState = function () {
     this.$state = structuredClone(this)
-    logger.methodCall(`${this.$entityName}{${this.$id}}.$saveState`, arguments)
+    logger.methodCall(`${this.$entityNameWithId}.$saveState`, arguments)
 }
 
 /**
@@ -26,13 +29,21 @@ Model.prototype.$rollbackChanges = function (names) {
     this.constructor.eachRelations(cb, names)
 }
 
+
+/**
+ * @var Boolean Является ли запись новой.
+ */
 Object.defineProperty(Model.prototype, '$isNew', { get: function () {
     return this.$id ? false : true
 }})
 
+/**
+ * @var Boolean Является ли запись "грязной" (с изменёнными, но не сохранёнными данными)
+ */
 Object.defineProperty(Model.prototype, '$isDirty', { get: function () {
     return this.$dirtyFields().length > 0
 }})
+
 
 /**
  * Проверка поля на изменённость.

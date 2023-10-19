@@ -1,19 +1,14 @@
 /**
- * Field.
+ * Поле.
  * @package evas-vue
  * @author Egor Vasyakin <egor@evas-php.com>
  * @license CC-BY-4.0
  */
 
-import { FieldBuilder } from './FieldBuilder.js'
+// import { FieldBuilder } from './FieldBuilder.js'
+import { Fieldable } from './Fieldable.js'
 
-export class Field {
-    /** @var String имя поля */
-    name
-    /** @var String лейбл поля */
-    label
-    /** @var Boolean обязательность значения */
-    required = true
+export class Field extends Fieldable {
     /** @var String тип */
     type
     /** @var Number минимальное значение или длина */
@@ -36,42 +31,6 @@ export class Field {
     error
 
     itemOf
-    
-    /**
-     * Конструктор.
-     * @param object|null свойства поля
-     */
-    constructor(props) {
-        if (props) {
-            if (props instanceof FieldBuilder) {
-                props = props.export()
-            }
-            if ('object' === typeof props && !Array.isArray(props)) for (let key in props) {
-                this[key] = props[key]
-            }
-            else {
-                console.error(
-                    'Field props must be an object or an instanceof FieldBuilder,',
-                    `${typeof props} given`,
-                    props
-                )
-            }
-        }
-
-        // return new Proxy(this, {
-        //     // get: function (self, key) {
-        //     get: function (self, key) {
-        //         // if (key in self) return self[key]
-        //         return function () {
-        //             console.log(key, arguments)
-        //             return this
-        //         }
-        //     }
-        // })
-    }
-
-    /** Геттер лейбла или имени поля. */
-    get labelOrName() { return this.label || this.name }
 
     /** Геттер лейбла или имени совпадающего поля. */
     get sameLabelOrName() { return this.sameLabel || this.same }
@@ -108,8 +67,20 @@ export class Field {
         return 'array' === this.type;
     }
 
-    isEmptyValue(value) {
-        return [null, undefined].includes(arguments.length > 0 ? value : this.value)
+    /**
+     * @param object|null свойства поля
+     */
+    constructor(props) {
+        super(props)
+        setProps(this, props)
+    }
+
+    /**
+     * Получение значения по умолчанию.
+     * @return mixed
+     */
+    getDefault() {
+        return 'function' === typeof this.default ? this.default() : this.default
     }
 
     /**
@@ -118,7 +89,7 @@ export class Field {
      * @return mixed значение
      */
     convertType(value) {
-        if (!this.required && this.isEmptyValue(value)) return null
+        if (!this.required && this.isEmptyValue(value)) return value
         if (this.isArrayType) return Array.isArray(value) ? Array.from(value) : value;
         if (this.isStringType) return value == null ? '' : String(value)
         if (this.isNumberType) {
@@ -131,14 +102,6 @@ export class Field {
     }
 
     /**
-     * Получение значения по умолчанию.
-     * @return mixed
-     */
-    getDefault() {
-        return 'function' === typeof this.default ? this.default() : this.default
-    }
-
-    /**
      * Подучение значения конвертированного типа или дефолтного значения.
      * @param mixed значение
      * @return mixed значение
@@ -148,4 +111,121 @@ export class Field {
     }
 }
 
+// раширение поля поддержкой валидации
 require('./Field.validate.js')
+
+/**
+ * Сборщик поля.
+ * @package evas-vue
+ * @author Egor Vasyakin <egor@evas-php.com>
+ * @license CC-BY-4.0
+ */
+import { FieldableBuilder } from './FieldableBuilder.js'
+
+export class FieldBuilder extends FieldableBuilder {
+    /** @var String имя поля */
+    _name
+    /** @var String лейбл поля */
+    _label
+    /** @var String тип */
+    _type
+    /** @var Number минимальное значение или длина */
+    _min
+    /** @var Number максимальное значение или длина */
+    _max
+    /** @var String паттерн значения */
+    _pattern
+    /** @var Object|Array опции значения */
+    _options
+    /** @var String имя совпадающего поля */
+    _same
+    /** @var String лейбл совпадающего поля */
+    _sameLabel
+
+    _itemOf
+
+    /**
+     * @param object|null свойства поля
+     */
+    constructor(props) {
+        super(props)
+        setProps(this, props)
+    }
+
+    name(value) {
+        this._name = value
+        return this
+    }
+    label(value) {
+        this._label = value
+        return this
+    }
+    type(value) {
+        this._type = value
+        return this
+    }
+    min(value) {
+        this._min = value
+        return this
+    }
+    max(value) {
+        this._max = value
+        return this
+    }
+    pattern(value) {
+        this._pattern = value
+        return this
+    }
+    options(value) {
+        if (!value) {
+            return console.error('Options not setting')
+        }
+        if (['string', 'number'].includes(typeof value)) {
+            value = arguments
+        }
+        if (!(Array.isArray(value) || 'object' === typeof value)) {
+            return console.error(
+                `Options of the field ${this._name} must be an array or an object,`,
+                `${typeof value} given`, 
+                value
+            )
+        }
+        if (Object.prototype.toString.call(value) === '[object Arguments]') {
+            value = Array.from(value)
+        }
+        this._options = value
+        return this
+    }
+    same(value, label) {
+        this._same = value
+        if (label) this.sameLabel(label)
+        return this
+    }
+    sameLabel(value) {
+        this._sameLabel = value
+        return this
+    }
+}
+
+
+/**
+ * Установка свойств для конструктора.
+ * @param object|null свойства поля
+ */
+function setProps(ctx, props) {
+    if (props) {
+        if (props instanceof FieldBuilder) {
+            props = props.export()
+        }
+        if ('object' === typeof props && !Array.isArray(props)) for (let key in props) {
+            ctx[key] = props[key]
+        }
+        else {
+            console.error(
+                'Field props must be an object or an instanceof FieldBuilder,',
+                `${typeof props} given`,
+                props
+            )
+        }
+    }
+}

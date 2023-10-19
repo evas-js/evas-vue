@@ -51,7 +51,7 @@ Field.prototype.setError = function (type, ctx = this) {
 Field.prototype.validateRequired = function (value) {
     this.error = null
     this.value = value
-    return (this.required && this.isEmptyValue(value))  ? this.setError('required') : true
+    return (this.required && this.isEmptyValue(value)) ? this.setError('required') : true
 }
 
 /**
@@ -118,7 +118,7 @@ Field.prototype.validateRange = function (value) {
 Field.prototype.validateOptions = function (value) {
     this.validateRequired(value)
     return (
-        this.validateRequired(value) && value && this.options && (
+        this.validateRequired(value) && !this.isEmptyValue(value) && this.options && (
             Array.isArray(this.options) 
             ? -1 === this.options.indexOf(value)
             : !this.options[value]
@@ -131,7 +131,7 @@ Field.prototype.validateOptions = function (value) {
  */
 Field.prototype.validatePattern = function (value) {
     return (
-        this.validateRequired(value) && value && this.pattern && !this.pattern.test(value)
+        this.validateRequired(value) && !this.isEmptyValue(value) && this.pattern && !this.pattern.test(value)
     ) ? this.setError('pattern') : true
 }
 
@@ -142,7 +142,7 @@ Field.prototype.validatePattern = function (value) {
  */
 Field.prototype.validateSame = function (value, values) {
     return (
-        this.same && this.validateRequired(value) && value
+        this.same && this.validateRequired(value) && !this.isEmptyValue(value)
         && (!values[this.same] || value !== values[this.same])
     ) ? this.setError('same') : true
 }

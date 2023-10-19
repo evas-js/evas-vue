@@ -41,6 +41,7 @@ export const logger = new class {
 
     arguments(args) {
         if (!this.debug) return
+        if ([undefined, null].includes(args)) return
         let count = args?.length || 0
         let templ = `Arguments (${count})`
         count ? this.returnGroup(() => {
@@ -65,7 +66,9 @@ export const logger = new class {
                 return cb()
             }, ...templ)
         } else {
-            templ.push(... (Array.isArray(args) || this.isArguments(args) ? args : [args]), ')')
+            if (args) {
+                templ.push(... (Array.isArray(args) || this.isArguments(args) ? args : [args]), ')')
+            }
             this.line(...templ)
         }
     }

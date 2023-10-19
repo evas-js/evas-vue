@@ -1,5 +1,5 @@
 /**
- * Model validate.
+ * Расширение модели поддержкой валидации.
  * @package evas-vue
  * @author Egor Vasyakin <egor@evas-php.com>
  * @license CC-BY-4.0
@@ -8,7 +8,7 @@
 import { logger } from '../Log.js'
 import { Model } from './Model.js'
 import { Field } from '../Field/Field.js'
-import { FieldsUnion } from '../Field/FieldsUnion.js'
+import { VariableField } from '../Field/VariableField.js'
 
 /** @var Function обработчик ошибок валидации */
 Model.validateErrorHandler = null
@@ -52,10 +52,17 @@ Model.prototype.$clearErrors = function () {
  */
 Model.prototype.$fieldNamesForValidate = function () {
     const dirty = this.$dirtyFields()
-    const viewed = this.$applyFieldsDisplayRules()
-    let fieldNames = dirty.filter(fieldName => viewed.includes(fieldName))
-    // logger.keyValue('dirty', dirty)
-    // logger.keyValue('viewed', viewed)
+    // const rules = this.$applyFieldsDisplayRules()
+    const display = this.$displayFields()
+    logger.keyValue('dirty', dirty)
+    logger.keyValue('display', display)
+    logger.keyValue('this', this)
+    logger.keyValue('this.$state', this.$state)
+    let fieldNames = this.$isNew && display.length ? display : dirty
+    if (Array.isArray(this.constructor.alwaysSend)) {
+        logger.keyValue('alwaysSend', this.constructor.alwaysSend)
+        fieldNames = fieldNames.concat(this.constructor.alwaysSend)
+    }
     // logger.keyValue('fieldNames', fieldNames)
 
     // const registered = this.constructor.fieldNames()
@@ -73,11 +80,12 @@ Model.prototype.$fieldNamesForValidate = function () {
  * Валидация записи.
  */
 Model.prototype.$validate = function (fieldNames = null) {
-    return logger.methodCall(`${this.$entityName}{${this.$id}}.$validate`, arguments, () => {
+    return logger.methodCall(`${this.$entityNameWithId}.$validate`, arguments, () => {
         if (!fieldNames) fieldNames = this.$fieldNamesForValidate()
         this.$clearErrors()
         this.constructor.eachFields((field) => {
-            if (!(field instanceof FieldsUnion || field instanceof Field)) return
+            if (!(field instanceof VariableField || field instanceof Field)) return
+            console.warn(field.name, this[field.name])
 
             if (!field.isValid(this[field.name])) {
                 this.constructor.handleValidateError(field, field.error)

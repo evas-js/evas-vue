@@ -1,5 +1,5 @@
 /**
- * Model CRUD methods.
+ * Расширение модели поддержкой CRUD-методов.
  * @package evas-vue
  * @author Egor Vasyakin <egor@evas-php.com>
  * @license CC-BY-4.0
@@ -153,8 +153,7 @@ Model.prototype.$logModelInfo = function () {
  * @param Function колбэк после сохранения
  */
 Model.prototype.$save = function (cb) {
-    // console.log('$save', this, this.$isDirty, this.$id, this.$isNew, this.constructor.useApi)
-    logger.methodCall(`${this.$entityName}{${this.$id}}.$save`, arguments, () => {
+    logger.methodCall(`${this.$entityNameWithId}.$save`, arguments, () => {
         this.$logModelInfo()
         if (!this.$isDirty) {
             logger.line('Nothing to save. End save')
@@ -188,7 +187,7 @@ Model.prototype.$save = function (cb) {
  */
 Model.prototype.$delete = function (cb) {
     this.$beforeDelete()
-    logger.methodCall(`${this.$entityName}{${this.$id}}.$delete`, arguments, () => {
+    logger.methodCall(`${this.$entityNameWithId}.$delete`, arguments, () => {
         this.$logModelInfo()
         if (this.constructor.useApi) this.constructor.delete(this, cb)
         else this.$saveState()

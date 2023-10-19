@@ -1,5 +1,5 @@
 /**
- * Api class for models.
+ * Api для моделей.
  * @package evas-vue
  * @author Egor Vasyakin <egor@evas-php.com>
  * @license CC-BY-4.0

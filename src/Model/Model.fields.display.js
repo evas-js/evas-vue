@@ -1,11 +1,22 @@
 /**
- * Model fields.
+ * Расширение модели поддержкой отображения полей.
  * @package evas-vue
  * @author Egor Vasyakin <egor@evas-php.com>
  * @license CC-BY-4.0
  */
 
+import { logger } from '../Log.js'
 import { Model } from './Model.js'
+import { Group, Tabs, Block } from './FieldGrouping.js'
+
+/** @var Object Правила переменного отображения полей */
+Model.rulesForVariableDisplayOfFields = {}
+/** @var Object Правила группировки полей */
+Model._fieldGrouping = null
+/** @var Object правила отображения полей */
+Model._displayRules = null
+/** @var Array|String|Number|null отображаемая группа полей */
+Model.prototype.$displayGroup = null
 
 /**
  * Установка правил отображения полей модели.
@@ -15,99 +26,154 @@ Model.setDisplayRules = function () {
     return {}
 }
 
-Model._displayRules = null
+/**
+ * Установка группировки полей.
+ * @return Object|Array
+ */
+Model.setFieldGrouping = function () {
+    return {}
+}
 
 /**
- * Получение правил отображаемия поля или полей модели.
+ * Группировка полей в группу-блок.
+ * @param String|Number имя группы
+ * @param Array|Object содержимое группы
+ * @return Block
+ */
+Model.block = function (name, items) {
+    // return new Block(...prepareArgs(...arguments)) 
+    return new Block(name, items) 
+}
+/**
+ * Группировка полей в группы-табы.
+ * @param String|Number имя группы
+ * @param Array|Object содержимое групп
+ * @return Tabs
+ */
+Model.tabs = function (name, items) {
+    return new Tabs(name, items)
+}
+
+
+/**
+ * Получение правил отображения поля или полей модели.
  * @param String|null имя поля
  * @return Object правила поля или полей
  */
-Model.displayRules = function (part = null) {
+Model.displayRules = function () {
     if (!this._displayRules) {
         const rules = this.setDisplayRules()
         // подтягиваем пропсы из полей
         Object.keys(rules).forEach(fieldName => {
             const field = this.field(fieldName)
-            if (field?.options) {
-                if ('string' === typeof rules[fieldName]) {
-                    rules[fieldName] = {
-                        component: rules[fieldName],
-                    }
-                }
-                if (!rules[fieldName].props) rules[fieldName].props = {}
-                rules[fieldName].props.options = field.options
+            if (!field) {
+                console.log(this.fields())
+                console.error(`Field for displayRule with name "${fieldName}" does not exists`)
+                delete rules[fieldName]
+                return
             }
+            let fieldRules = rules[fieldName]
+            if (field?.options) {
+                if ('string' === typeof fieldRules) {
+                    fieldRules = { component: fieldRules }
+                }
+                if (!fieldRules.props) fieldRules.props = {}
+                fieldRules.props.options = field.options
+            }
+            field.setDisplay(fieldRules)
         })
         this._displayRules = rules
     }
-    console.log('displayRules', this._displayRules)
-    return part ? this._displayRules[part] : this._displayRules
+    return this._displayRules
 }
 
 /**
- * Получение правила отображения поля или самого поля.
- * @param String имя поля
- * @return Object|Field
+ * Получение правил группировки полей.
+ * @return Object правила группировки
  */
-Model.fieldView = function (name) {
-    return this.displayRules()[name] || this.field(name)
-}
-Model.prototype.$fieldView = function (name) {
-    return this.constructor.fieldView(name)
-}
-
-/**
- * Получение имен полей с правилами отображением.
- * @return Array
- */
-Model.fieldNamesInDisplayRules = function () {
-    return Object.keys(this.displayRules())
-}
-
-/**
- * Итеративная обработка отображений полей в функции.
- * @param Function функция обработки
- * @param Array|null имена полей
- * @return Boolean
- */
-Model.eachView = function (cb, names) {
-    if (!names) names = this.viewFieldNames()
-    for (let name of names) {
-        let view = this.fieldView(name)
-        if (!view) {
-            throw new Error(
-                `View for field "${name}" not registered in model "${this.entityName}"`
-            )
+Model.fieldGrouping = function () {
+    logger.methodCall(`${this.entityName}.fieldGrouping`, null, () => {
+        if (!this._fieldGrouping) {
+            this._fieldGrouping = this.setFieldGrouping() ?? {}
+            if (!(this._fieldGrouping instanceof Group)) { 
+                this._fieldGrouping = new Block(this._fieldGrouping)
+            }
+            logger.line('set this._fieldGrouping')
+        } else {
+            logger.line('get cached this._fieldGrouping')
         }
-        if (cb.apply(this, [view, name])) return true
-    }
-    return false
+        logger.keyValue('this._fieldGrouping', this._fieldGrouping)
+    })
+    return this._fieldGrouping
 }
 
 /**
- * @var Правила переменного отображения полей
+ * Получение группы полей или поля.
+ * @param Array|...(String|Number) путь к группе
+ * @return Group|Field
  */
-Model.rulesForVariableDisplayOfFields = {}
+Model.fieldGroup = function (names) {
+    if (arguments.length && !Array.isArray(names)) {
+        names = arguments.length > 1 ? Array.from(arguments) : [names]
+    }
+    return logger.methodCall(`${this.entityName}.fieldGroup`, arguments, () => {
+        logger.keyValue('names', names)
+        const result = this.fieldGrouping().next(names)
+        logger.keyValue('result', result)
+        return result
+    })
+}
+Model.prototype.$fieldGroup = function () {
+    return logger.methodCall(`${this.$entityNameWithId}.$fieldGroup`, arguments, () => {
+        this.$displayGroup = this.constructor.fieldGroup(...arguments)
+        logger.keyValue('this.$displayGroup', this.$displayGroup)
+        return this.$displayGroup
+    })
+}
+
+/**
+ * Получение полей для отображения с учётом группировки.
+ * @param Array|String|Number|null отображаемая группа полей
+ * @return Array поля доступные к отображению
+ */
+Model.prototype.$displayFields = function (group = null) {
+    return logger.methodCall(`${this.$entityNameWithId}.$displayFields`, arguments, () => {
+        if (group) this.$fieldGroup(group)
+        if (!this.$displayGroup) {
+            this.$fieldGroup()
+        }
+        logger.keyValue('this.$displayGroup', this.$displayGroup)
+        logger.keyValue('this', this)
+        const fields = this.$displayGroup.recursiveFields()
+        logger.keyValue('fields', fields)
+        const displayFields = this.$applyFieldsDisplayRules(fields)
+        logger.keyValue('return displayFields', displayFields)
+        return displayFields
+    })
+}
+
 
 /**
  * Применение правил отображение полей в зависимости от значения других полей.
- * @param String|null имя поля
+ * @param String|Number|null отображаемая группа полей
  * @return Array поля доступные к отображению
  */
-Model.prototype.$applyFieldsDisplayRules = function (part = null) {
-    return Object.keys(this.constructor.displayRules(part)).reduce((viewFields, fieldName) => {
+Model.prototype.$applyFieldsDisplayRules = function (fieldNames = null) {
+    // if (!fieldNames) fieldNames = this.$fieldNames()
+    if (!fieldNames) fieldNames = this.$displayFields()
+    return Object.values(fieldNames).reduce((viewFields, fieldName) => {
         const rule = this.constructor.rulesForVariableDisplayOfFields?.[fieldName]
         if (rule) {
             if (Array.isArray(rule)) {
                 const [parentFieldName, parentValue] = rule
-                const isShow =
-                    viewFields.includes(parentFieldName) &&
-                    this?.[parentFieldName] === parentValue
-                if (isShow) viewFields.push(fieldName)
+                if (viewFields.includes(parentFieldName)) {
+                    let expected = this?.[parentFieldName]
+                    expected = this.$field(parentFieldName).convertTypeWithDefault(expected)
+                    if (expected === parentValue) viewFields.push(fieldName)
+                }
             } else if ('function' === typeof rule) {
                 rule(this) && viewFields.push(fieldName)
             }
-            console.log('rule', fieldName, rule, viewFields)
         } else {
             viewFields.push(fieldName)
         }
@@ -115,14 +181,68 @@ Model.prototype.$applyFieldsDisplayRules = function (part = null) {
     }, [])
 }
 
-Model.prototype.$fieldsToDisplay = function (part = null) {
-    return this.$applyFieldsDisplayRules(part).map(fieldName => {
-        return {
-            key: fieldName,
-            value: this[fieldName],
-            view: this.$fieldView(fieldName) || 'string',
-            isDirtyField: this.$isDirtyField(fieldName) || false,
-            disabled: false,
-        }
+/**
+ * Очистка данных полей.
+ * @param Array имена полей
+ * @return Array имена полей
+ */
+Model.prototype.$clearFields = function (fieldNames = null) {
+    return logger.methodCall(`${this.$entityNameWithId}.$clearFields`, arguments, () => {
+        if (!fieldNames) fieldNames = this.constructor.fieldNames()
+        fieldNames.forEach(name => {
+            if (name !== 'id') this[name] = this.$state[name]
+        })
+        return fieldNames
     })
 }
+/**
+ * Очистка данных отображаемых полей.
+ */
+Model.prototype.$clearDisplayFields = function () {
+    logger.methodCall(`${this.$entityNameWithId}.$clearDisplayFields`, arguments, () => {
+        const displayFields = this.$displayFields()
+        const clearFields = this.constructor.fieldNames().filter(
+            name => !displayFields.includes(name)
+        )
+        this.$clearFields(clearFields)
+    })
+}
+
+/**
+ * Выбор группы полей (переключение табов).
+ * @param Group группа полей
+ */
+Model.prototype.$selectGroup = function (group) {
+    logger.methodCall(`${this.$entityNameWithId}.$selectGroup`, arguments, () => {
+        this.$clearDisplayFields() // очистка отображаемых полей
+        group.select()
+    })
+}
+
+
+
+// /**
+//  * Получение полей для отображения.
+//  * @param String|Number|null отображаемая группа полей
+//  * @return Array поля доступные к отображению
+//  */
+// Model.prototype.$displayFields = function (group = null) {
+//     return logger.methodCall(`${this.$entityName}{${this.$id}}.$displayFields`, arguments, () => {
+//         this.$displayGroup = group
+//         const displayFields = this.$applyFieldsDisplayRules(group)
+//         logger.keyValue('return', displayFields)
+//         return displayFields
+//     })
+// }
+
+// Model.prototype.$displayFieldsWithPrepare = function (cb = null, group = null) {
+//     return this.$displayFields(group).map(fieldName => {
+//         const fieldProps = {
+//             fieldName: fieldName,
+//             value: this[fieldName],
+//             view: this.$field(fieldName),
+//             isDirty: this.$isDirtyField(fieldName) || false,
+//         }
+//         return cb ? cb(fieldProps) : fieldProps
+//     })
+// }

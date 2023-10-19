@@ -9,8 +9,12 @@ import { Api } from './Api.js'
 import { logger } from './Log.js'
 import { reactive } from 'vue'
 
-export { MockApi } from './MockApi.js'
 export { Model } from './Model/Model.js'
+export { MockApi } from './MockApi.js'
+
+export { Field } from './Field/Field.js'
+export { VariableField } from './Field/VariableField.js'
+export { Group, Block, Tabs, Tab } from './Model/FieldGrouping.js'
 
 export const EvasVue = new function () {
     this.models = reactive({})

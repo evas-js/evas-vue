@@ -1,5 +1,5 @@
 /**
- * Mock api help.
+ * Хелпер работы с моками для моделей.
  * @package evas-vue
  * @author Egor Vasyakin <egor@evas-php.com>
  * @license CC-BY-4.0

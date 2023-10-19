@@ -1,5 +1,5 @@
 /**
- * Model api.
+ * Расширение модели поддержкой api.
  * @package evas-vue
  * @author Egor Vasyakin <egor@evas-php.com>
  * @license CC-BY-4.0

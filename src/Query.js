@@ -1,5 +1,5 @@
 /**
- * Query for data model.
+ * Запросы к хранилищу для моделей.
  * @package evas-vue
  * @author Egor Vasyakin <egor@evas-php.com>
  * @license CC-BY-4.0
@@ -15,6 +15,8 @@ export const Query = class {
         '>=':   (col, val) => { return col >= val }, 
         '<':    (col, val) => { return col < val },
         '<=':   (col, val) => { return col <= val }, 
+        // in - whereIn
+        // notIn - whereNotIn
     }
 
     model
@@ -33,6 +35,10 @@ export const Query = class {
             value = condition
             condition = '='
         }
+        if (['in', 'notIn'].includes(condition)) {
+            const isNot = 'notIn' === condition
+            return this._whereIn(isOr, isNot, column, value)
+        }
         this._wheres.push({ column, condition, value, isOr })
         return this
     }
@@ -45,28 +51,36 @@ export const Query = class {
         return this._where(true, ...arguments)
     }
 
-    _whereIn(isOr, column, values) {
+    _whereIn(isOr, isNot, column, values) {
         if ('string' !== typeof column) {
             throw new Error(
-                `whereIn argument column must be a string, ${typeof column} given`
+                `_whereIn argument column must be a string, ${typeof column} given`
             )
         }
         if (!Array.isArray(values)) {
             throw new Error(
-                `whereIn argument values must be an array, ${typeof values} given`
+                `_whereIn argument values must be an array, ${typeof values} given`
             )
         }
         return this._where(isOr, (row) => {
-            return values.includes(row[column])
+            return values.includes(row[column]) === !isNot
         })
     }
 
     whereIn(/*column, values*/) {
-        return this._whereIn(false, ...arguments)
+        return this._whereIn(false, false, ...arguments)
     }
 
     orWhereIn(/*column, values*/) {
-        return this._whereIn(true, ...arguments)
+        return this._whereIn(true, false, ...arguments)
+    }
+
+    whereNotIn(/*column, values*/) {
+        return this._whereIn(false, true, ...arguments)
+    }
+
+    orWhereNotIn(/*column, values*/) {
+        return this._whereIn(true, true, ...arguments)
     }
 
     orderBy(column, desc = false) {
@@ -107,11 +121,6 @@ export const Query = class {
     withAllRecousive() {
         // 
         return this
-    }
-
-    first() {
-        let rows = this.limit(1).get()
-        return rows.length > 0 ? rows[0] : null
     }
 
     _groupBy(collection, iteratee) {
@@ -209,7 +218,12 @@ export const Query = class {
         return rows
     }
 
-    get() {
+    first(fieldNames = null) {
+        let rows = this.limit(1).get(fieldNames)
+        return rows.length > 0 ? rows[0] : null
+    }
+
+    get(fieldNames = null) {
         // let rows = this.model.all()
 
         // where (filter)
@@ -254,6 +268,25 @@ export const Query = class {
                     }
                     row[relation.name] = relateds
                 })
+            })
+        }
+
+        // return concrete fieldNames
+        if (fieldNames) {
+            rows = rows.map(row => {
+                if (['string', 'number'].includes(typeof fieldNames)) {
+                    return row[fieldNames]
+                }
+                if (Array.isArray(fieldNames)) {
+                    return fieldNames.map((fieldName) => row[fieldName])
+                } 
+                if ('object' === typeof fieldNames) {
+                    const newRow = {}
+                    Object.entries(fieldNames).forEach(([alias, fieldName]) => {
+                        newRow[alias] = row[fieldName]
+                    })
+                    return newRow
+                }
             })
         }
 

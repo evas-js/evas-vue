@@ -1,5 +1,5 @@
 /**
- * Relation for data model.
+ * Связь записей для модели.
  * @package evas-vue
  * @author Egor Vasyakin <egor@evas-php.com>
  * @license CC-BY-4.0

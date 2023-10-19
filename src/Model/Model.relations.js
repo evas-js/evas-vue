@@ -1,5 +1,5 @@
 /**
- * Model relations.
+ * Расширение модели поддержкой связей.
  * @package evas-vue
  * @author Egor Vasyakin <egor@evas-php.com>
  * @license CC-BY-4.0
@@ -53,6 +53,12 @@ Model.relation = function (name) {
     return this.relations()[name]
 }
 
+/**
+ * Итеративная обработка связей колбэком.
+ * @param Function колбэк
+ * @param Array|null имена связей для обработки или все
+ * @return Boolean false - ничего не произошло, true - что-то произошло во время обработки
+ */
 Model.eachRelations = function (cb, names) {
     if (!names) names = this.relationNames()
     for (let name of names) {
