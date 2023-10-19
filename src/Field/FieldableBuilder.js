@@ -63,7 +63,6 @@ export class FieldableBuilder {
             key = key.substring(1)
             data[key] = value
         })
-        console.warn('export', data)
         return data
     }
 }
