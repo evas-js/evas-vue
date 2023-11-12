@@ -42,11 +42,11 @@ export const logger = new class {
     arguments(args) {
         if (!this.debug) return
         if ([undefined, null].includes(args)) return
-        let count = args?.length || 0
+        let count = Object.keys(args)?.length || 0
         let templ = `Arguments (${count})`
         count ? this.returnGroup(() => {
             if (this.isArguments(args)) args = Array.from(args)
-            args.forEach((arg, i) => {
+            Object.entries(args).forEach(([i, arg]) => {
                 this.line(i, arg)
             })
         }, templ) : this.line(templ)
@@ -67,7 +67,7 @@ export const logger = new class {
             }, ...templ)
         } else {
             if (args) {
-                templ.push(... (Array.isArray(args) || this.isArguments(args) ? args : [args]), ')')
+                templ.push(... (Array.isArray(args) || this.isArguments(args) ? args : [args]))
             }
             this.line(...templ)
         }

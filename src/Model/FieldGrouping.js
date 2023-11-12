@@ -11,13 +11,16 @@ export class Group
     type = 'group'
     name
     items
+    names = {}
     // selectedIndex
 
     constructor(name, items) {
+        // if (arguments < 2 || ('object' === typeof name && name)) {
         if (arguments < 2 || 'object' === typeof name) {
             items = name
             name = null
         }
+        console.log(name, items)
         this.name = name
         this.setItems(items)
     }
@@ -53,11 +56,13 @@ export class Group
             return item
         })
     }
+    
     next(names, cb) {
         const className = this.constructor.name
         return logger.methodCall(`${className}.next`, null, () => {
             logger.keyValue('this', this)
             logger.keyValue('names', names)
+            
             if (!names || !names.length) {
                 if (cb) cb(this)
                 // logger.keyValue(`result is ${className} items`, this.items)
@@ -75,12 +80,66 @@ export class Group
         })
     }
 
-    recursiveFields() {
+    setFields(model) {
+        logger.methodCall(`${this.constructor.name}.setFields`, null, () => {
+            logger.keyValue('model', model)
+            logger.keyValue('group', this)
+
+            this.eachItems((key, item) => {
+                this.names[key] = item
+                if (item instanceof Group) {
+                    item.setFields(model)
+                }
+                else if (!(item instanceof Addon)) {
+                    const field = model.field(item)
+                    if (field) this.items[key] = field
+                    else delete this.items[key]
+                }
+            })
+
+        })
+    }
+
+    // eachFieldsRecursive(cb) {
+    //     const items = {}
+    //     this.eachItems((key, item) => {
+    //         let field
+    //         if (item instanceof Group) {
+    //             // item = Object.assign({}, item)
+    //             // item.setItems(item.eachFieldsRecursive(cb))
+    //             field = item.eachFieldsRecursive(cb)
+    //         } else if (item instanceof Addon) {
+    //             field = item
+    //         } else {
+    //             field = cb(key, item)
+    //         }
+    //         if (field) items[key] = field
+    //     })
+    //     // console.log(this.constructor)
+    //     // console.error(items)
+    //     // // return items
+    //     // // const result = structuredClone(this)
+    //     // // const result = Object.assign({}, this)
+    //     // // result.items = items
+    //     // // const result = new Group(this.name, items)
+    //     // console.warn(this.name, items)
+    //     const result = new this.constructor(this.name)
+    //     // // const result = new this.constructor(this.name)
+    //     // // result.items = items
+    //     result.setItems(items)
+    //     console.log('eachFieldsRecursive')
+    //     console.error(items, result)
+    //     // console.error(result)
+    //     return result
+    //     // return this
+    // }
+
+    concatFields() {
         let fields = []
         this.eachItems((key, item) => {
             if (item instanceof Group) {
                 if (!(item instanceof Tab) || item.selected) {
-                    fields = fields.concat(item.recursiveFields())
+                    fields = fields.concat(item.concatFields())
                 }
             } else {
                 fields.push(item)
@@ -152,4 +211,13 @@ export class Block extends Group
     // setRegular(value = true) {
     //     this.regular = value
     // }
+}
+
+export class Addon
+{
+    type = 'addon'
+    // data
+    constructor(data) {
+        this.data = data
+    }
 }

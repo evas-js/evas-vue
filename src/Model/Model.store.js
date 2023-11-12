@@ -44,7 +44,7 @@ Model.each = function (cb) {
 }
 
 /**
- * Очистка записей модли в хранилище.
+ * Очистка записей модели в хранилище.
  * @return this
  */
 Model.clear = function () {

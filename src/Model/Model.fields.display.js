@@ -7,12 +7,12 @@
 
 import { logger } from '../Log.js'
 import { Model } from './Model.js'
-import { Group, Tabs, Block } from './FieldGrouping.js'
+import { Addon, Block, Group, Tabs } from './FieldGrouping.js'
 
 /** @var Object Правила переменного отображения полей */
 Model.rulesForVariableDisplayOfFields = {}
 /** @var Object Правила группировки полей */
-Model._fieldGrouping = null
+Model._fieldNamesGrouping = null
 /** @var Object правила отображения полей */
 Model._displayRules = null
 /** @var Array|String|Number|null отображаемая группа полей */
@@ -45,6 +45,16 @@ Model.block = function (name, items) {
     return new Block(name, items) 
 }
 /**
+ * Группировка полей в группы-блоки.
+ * @param Array|Object группы-блоки
+ * @return Array
+ */
+Model.blocks = function(items) {
+    return Object.entries(items).map(([name, item]) => {
+        return this.block(name, item)
+    })
+}
+/**
  * Группировка полей в группы-табы.
  * @param String|Number имя группы
  * @param Array|Object содержимое групп
@@ -52,6 +62,14 @@ Model.block = function (name, items) {
  */
 Model.tabs = function (name, items) {
     return new Tabs(name, items)
+}
+/**
+ * Дополнительные вставки для отображения.
+ * @param mixed данные
+ * @return Addon
+ */
+Model.addon = function (data) {
+    return new Addon(data)
 }
 
 
@@ -91,20 +109,21 @@ Model.displayRules = function () {
  * Получение правил группировки полей.
  * @return Object правила группировки
  */
-Model.fieldGrouping = function () {
-    logger.methodCall(`${this.entityName}.fieldGrouping`, null, () => {
-        if (!this._fieldGrouping) {
-            this._fieldGrouping = this.setFieldGrouping() ?? {}
-            if (!(this._fieldGrouping instanceof Group)) { 
-                this._fieldGrouping = new Block(this._fieldGrouping)
+Model.fieldNamesGrouping = function () {
+    logger.methodCall(`${this.entityName}.fieldNamesGrouping`, null, () => {
+        if (!this._fieldNamesGrouping) {
+            this._fieldNamesGrouping = this.setFieldGrouping() ?? {}
+            if (!(this._fieldNamesGrouping instanceof Group)) { 
+                this._fieldNamesGrouping = new Block(this._fieldNamesGrouping)
             }
-            logger.line('set this._fieldGrouping')
+            this._fieldNamesGrouping.setFields(this)
+            logger.line('set this._fieldNamesGrouping')
         } else {
-            logger.line('get cached this._fieldGrouping')
+            logger.line('get cached this._fieldNamesGrouping')
         }
-        logger.keyValue('this._fieldGrouping', this._fieldGrouping)
+        logger.keyValue('this._fieldNamesGrouping', this._fieldNamesGrouping)
     })
-    return this._fieldGrouping
+    return this._fieldNamesGrouping
 }
 
 /**
@@ -112,20 +131,52 @@ Model.fieldGrouping = function () {
  * @param Array|...(String|Number) путь к группе
  * @return Group|Field
  */
-Model.fieldGroup = function (names) {
-    if (arguments.length && !Array.isArray(names)) {
+// Model.fieldNamesGroup = function (names) {
+//     if (![null, undefined].includes(names) && arguments.length && !Array.isArray(names)) {
+//         names = arguments.length > 1 ? Array.from(arguments) : [names]
+//     }
+//     return logger.methodCall(`${this.entityName}.fieldNamesGroup`, arguments, () => {
+//         logger.keyValue('names', names)
+//         const result = this.fieldNamesGrouping().next(names)
+//         logger.keyValue('result', result)
+//         return result
+//     })
+// }
+// Model.prototype.$fieldNamesGroup = function () {
+//     return logger.methodCall(`${this.$entityNameWithId}.$fieldNamesGroup`, arguments, () => {
+//         this.$displayGroup = this.constructor.fieldNamesGroup(...arguments)
+//         logger.keyValue('this.$displayGroup', this.$displayGroup)
+//         return this.$displayGroup
+//     })
+// }
+
+Model.fieldsGroup = function (names) {
+    if (![null, undefined].includes(names) && arguments.length && !Array.isArray(names)) {
         names = arguments.length > 1 ? Array.from(arguments) : [names]
     }
-    return logger.methodCall(`${this.entityName}.fieldGroup`, arguments, () => {
+    return logger.methodCall(`${this.entityName}.fieldsGroup`, arguments, () => {
         logger.keyValue('names', names)
-        const result = this.fieldGrouping().next(names)
-        logger.keyValue('result', result)
-        return result
+        const group = this.fieldNamesGrouping().next(names)
+        logger.keyValue('result group', group)
+        // if (!group) return group
+        // return group.eachFieldsRecursive((key, value) => {
+        //     console.log(key, value)
+        //     return this.field(value)
+        // })
+        return group
     })
 }
-Model.prototype.$fieldGroup = function () {
-    return logger.methodCall(`${this.$entityNameWithId}.$fieldGroup`, arguments, () => {
-        this.$displayGroup = this.constructor.fieldGroup(...arguments)
+Model.prototype.$fieldsGroup = function () {
+    return logger.methodCall(`${this.$entityNameWithId}.$fieldsGroup`, arguments, () => {
+        // const group = this.$fieldNamesGroup(...arguments)
+        // logger.keyValue('group', group)
+        // // if (!group) return group
+        // // return group.eachFieldsRecursive((key, value) => {
+        // //     console.log(1, key, value)
+        // //     return this.$field(value)
+        // // })
+        // return group
+        this.$displayGroup = this.constructor.fieldsGroup(...arguments)
         logger.keyValue('this.$displayGroup', this.$displayGroup)
         return this.$displayGroup
     })
@@ -138,13 +189,13 @@ Model.prototype.$fieldGroup = function () {
  */
 Model.prototype.$displayFields = function (group = null) {
     return logger.methodCall(`${this.$entityNameWithId}.$displayFields`, arguments, () => {
-        if (group) this.$fieldGroup(group)
+        if (group) this.$fieldsGroup(group)
         if (!this.$displayGroup) {
-            this.$fieldGroup()
+            this.$fieldsGroup()
         }
         logger.keyValue('this.$displayGroup', this.$displayGroup)
         logger.keyValue('this', this)
-        const fields = this.$displayGroup.recursiveFields()
+        const fields = this.$displayGroup.concatFields()
         logger.keyValue('fields', fields)
         const displayFields = this.$applyFieldsDisplayRules(fields)
         logger.keyValue('return displayFields', displayFields)
@@ -159,26 +210,31 @@ Model.prototype.$displayFields = function (group = null) {
  * @return Array поля доступные к отображению
  */
 Model.prototype.$applyFieldsDisplayRules = function (fieldNames = null) {
-    // if (!fieldNames) fieldNames = this.$fieldNames()
-    if (!fieldNames) fieldNames = this.$displayFields()
-    return Object.values(fieldNames).reduce((viewFields, fieldName) => {
-        const rule = this.constructor.rulesForVariableDisplayOfFields?.[fieldName]
-        if (rule) {
-            if (Array.isArray(rule)) {
-                const [parentFieldName, parentValue] = rule
-                if (viewFields.includes(parentFieldName)) {
-                    let expected = this?.[parentFieldName]
-                    expected = this.$field(parentFieldName).convertTypeWithDefault(expected)
-                    if (expected === parentValue) viewFields.push(fieldName)
-                }
-            } else if ('function' === typeof rule) {
-                rule(this) && viewFields.push(fieldName)
+    return logger.methodCall(`${this.$entityNameWithId}.$applyFieldsDisplayRules`, arguments, () => {
+        // if (!fieldNames) fieldNames = this.$fieldNames()
+        if (!fieldNames) fieldNames = this.$displayFields()
+        return Object.values(fieldNames).reduce((viewFields, fieldName) => {
+            if (!['string', 'number'].includes(typeof fieldName)) {
+                fieldName = fieldName.name
             }
-        } else {
-            viewFields.push(fieldName)
-        }
-        return viewFields
-    }, [])
+            const rule = this.constructor.rulesForVariableDisplayOfFields?.[fieldName]
+            if (rule) {
+                if (Array.isArray(rule)) {
+                    const [parentFieldName, parentValue] = rule
+                    if (viewFields.includes(parentFieldName)) {
+                        let expected = this?.[parentFieldName]
+                        expected = this.$field(parentFieldName).convertTypeWithDefault(expected)
+                        if (expected === parentValue) viewFields.push(fieldName)
+                    }
+                } else if ('function' === typeof rule) {
+                    rule(this) && viewFields.push(fieldName)
+                }
+            } else {
+                viewFields.push(fieldName)
+            }
+            return viewFields
+        }, [])
+    })
 }
 
 /**
@@ -214,7 +270,7 @@ Model.prototype.$clearDisplayFields = function () {
  */
 Model.prototype.$selectGroup = function (group) {
     logger.methodCall(`${this.$entityNameWithId}.$selectGroup`, arguments, () => {
-        this.$clearDisplayFields() // очистка отображаемых полей
+        // this.$clearDisplayFields() // очистка отображаемых полей
         group.select()
     })
 }
