@@ -50,8 +50,10 @@ Model.hasApiRoute = function (name) {
  * @param String имя вызванного метода
  * @param Function колбэк
  */
-Model.apiDataFetched = function (data, res, name, cb) {
-    this.beforeFetched(name, data, res)
+Model.apiDataFetched = function (data, res, name, cb) {    
+    const hooked = this.beforeFetched(name, data, res)
+    // hooked data
+    if (hooked?.data) data = hooked.data
     // console.log(name, 'fetched api data:', data)
     if (data) {
         if (data.$data) {
@@ -105,6 +107,11 @@ Model.fetch = function (name, args, cb) {
         return logger.line(`Api not enabled for model "${this.entityName}"`)
     }
     if (args instanceof Model) args = Object.assign({}, args)
+    
+    const hooked = this.beforeFetch(name, args, cb)
+    // hooked args
+    if (hooked?.args) args = hooked.args
+
     return this.callApiRoute(
         name, args, (data, res) => this.apiDataFetched(data, res, name, cb)
     )
@@ -155,8 +162,12 @@ Model.fetchDelete = function (args, cb) {
 
 
 // Model api hooks
-
-Model.beforeFetched = function () {}
+Model.beforeFetch = function (name, args) {
+    return { args }
+}
+Model.beforeFetched = function (name, data) {
+    return { data }
+}
 Model.afterFetched = function () {}
 Model.beforeSubFetched = function () {}
 Model.afterSubFetched = function () {}
