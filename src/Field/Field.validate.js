@@ -62,6 +62,11 @@ Field.prototype.validateRequired = function (value) {
 Field.prototype.validateType = function (value) {
     if (this.isEmptyValue(value) && !this.required) return true
     let expectedType = this.type
+    if (!expectedType) {
+        // тип не указан
+        logger.line(`Не проверяем тип. Field{${this.name}}.type не указан:`, expectedType)
+        return true
+    }
     if (['number', 'int', 'integer', 'float'].includes(this.type)) {
         expectedType = 'number'
     }
