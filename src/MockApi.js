@@ -256,6 +256,7 @@ function wheres(rows, wheres) {
     })
 }
 function orders(rows, orders) {
+    if (!Array.isArray(orders)) orders = [orders]
     for (let order of orders) {
         rows = rows.sort((a, b) => {
             if (a[order.column] === b[order.column]) return 0
