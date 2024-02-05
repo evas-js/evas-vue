@@ -15,6 +15,7 @@ export const Query = class {
         '>=':   (col, val) => { return col >= val }, 
         '<':    (col, val) => { return col < val },
         '<=':   (col, val) => { return col <= val }, 
+        '%':    (col, val) => { return col || col.indexOf(val) !== -1 }, 
         // in - whereIn
         // notIn - whereNotIn
     }
