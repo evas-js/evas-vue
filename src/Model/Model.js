@@ -26,10 +26,11 @@ export class Model {
             this.$beforeNew(data, afterFetch)
             if (!data) data = {}
             this.$fill(data)
+            const proxy = new Proxy(this, this)
             if (!afterFetch || this.$id) {
-                this.constructor.insertOrUpdate(this, afterFetch)
+                this.constructor.insertOrUpdate(proxy, afterFetch)
             }
-            return new Proxy(this, this)
+            return proxy
         })
     }
 
