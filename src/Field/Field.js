@@ -108,7 +108,8 @@ export class Field extends Fieldable {
      */
     convertTypeWithDefault(value) {
         // return this.convertType(value !== undefined ? value : this.getDefault())
-        return this.convertType(![undefined, null].includes(value) ? value : this.getDefault())
+        // return this.convertType(![undefined, null].includes(value) ? value : this.getDefault())
+        return [undefined, null].includes(value) ? this.getDefault() : this.convertType(value)
     }
 }
 
