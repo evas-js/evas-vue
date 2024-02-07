@@ -107,7 +107,8 @@ export class Field extends Fieldable {
      * @return mixed значение
      */
     convertTypeWithDefault(value) {
-        return this.convertType(value !== undefined ? value : this.getDefault())
+        // return this.convertType(value !== undefined ? value : this.getDefault())
+        return this.convertType(![undefined, null].includes(value) ? value : this.getDefault())
     }
 }
 
