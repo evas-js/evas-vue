@@ -9,6 +9,19 @@ import { logger } from '../Log.js'
 import { Query } from '../Query.js'
 
 export class Model {
+    static entityName = null
+    static primary = 'id'
+
+    set(target, key, value) {
+        const field = target.constructor?.field(key)
+        if (field) {
+            value = field.convertTypeWithDefault(value)
+        }
+        console.log('SET!', key, value)
+        target[key] = value
+        return true
+    }
+    
     constructor (data, afterFetch = true) {
         return logger.methodCall(`new ${this.$entityName}`, arguments, () => {
             this.$beforeNew(data, afterFetch)
@@ -20,9 +33,6 @@ export class Model {
             return new Proxy(this, this)
         })
     }
-
-    static entityName = null
-    static primary = 'id'
 
     get $entityName() {
         return this.constructor.entityName
@@ -43,7 +53,8 @@ Model.isRootModel = function () {
 // entity $id (value of the primary key)
 Object.defineProperty(Model.prototype, '$id', {
     set: function (value) {
-        this[this.constructor.primary] = value
+        // this[this.constructor.primary] = value
+        this.set(this, this.constructor.primary, value)
     },
     get: function () {
         return this[this.constructor.primary]
@@ -70,7 +81,8 @@ Model.prototype._$fillFields = function (data) {
     logger.returnGroup(() => {
         this.constructor.eachFields((field) => {
             // конвертируем тип значения
-            this[field.name] = field.convertTypeWithDefault(data[field.name])
+            // this[field.name] = field.convertTypeWithDefault(data[field.name])
+            this.set(this, field.name, field.convertTypeWithDefault(data[field.name]))
             logger.keyValue(`${this.$entityName}{${id}}.${field.name}`, this[field.name])
         })
     }, 'fill in the fields')
