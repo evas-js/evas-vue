@@ -17,7 +17,6 @@ export class Model {
         if (field) {
             value = field.convertTypeWithDefault(value)
         }
-        console.log('SET!', key, value)
         target[key] = value
         return true
     }
