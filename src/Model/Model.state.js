@@ -16,6 +16,9 @@ Model.prototype.$state = {}
  */
 Model.prototype.$saveState = function () {
     this.$state = structuredClone(this)
+    delete this.$state.$state
+    delete this.$state.$displayGroup
+    delete this.$state.$errors
     logger.methodCall(`${this.$entityNameWithId}.$saveState`, arguments)
 }
 
