@@ -1,6 +1,6 @@
 {
   "name": "evas-vue",
-  "version": "1.2.4",
+  "version": "1.2.5",
   "description": "Vue plugin adding layers of ORM (ModelsStore, Model, Relation, Query), Api (+mocks), Validation (Field validator)",
   "main": "src/index.js",
   "scripts": {
