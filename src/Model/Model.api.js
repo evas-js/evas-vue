@@ -68,7 +68,7 @@ Model.apiDataFetched = function (data, res, name, cb) {
                     }
                     this.beforeSubFetched(type, sub)
                     let entities = model.insertOrUpdate(sub.rows, true)
-                    if (sub.totalRows) model.totalRows = sub.totalRows
+                    if (![undefined, null].includes(sub.totalRows)) model.totalRows = sub.totalRows
                     if (cb) cb(sub, entities, res)
                     this.afterSubFetched(type, entities)
                 })

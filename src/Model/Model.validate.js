@@ -87,7 +87,7 @@ Model.prototype.$validate = function (fieldNames = null) {
             if (!(field instanceof VariableField || field instanceof Field)) return
             console.warn(field.name, this[field.name])
 
-            if (!field.isValid(this[field.name])) {
+            if (!field.isValid(this[field.name], this)) {
                 this.constructor.handleValidateError(field, field.error)
                 this.$errors.push(field.error)
             }
@@ -95,7 +95,7 @@ Model.prototype.$validate = function (fieldNames = null) {
             if (Array.isArray(field.value) && field.itemOf) {
                 this[field.name] = field.value = field.value.map(item => {
                     // field.itemOf.name = `${field.name} [${index}]`
-                    if (!field.itemOf.isValid(item)) {
+                    if (!field.itemOf.isValid(item, this)) {
                         this.constructor.handleValidateError(field.itemOf, field.itemOf.error)
                         this.$errors.push(field.itemOf.error)
                     }

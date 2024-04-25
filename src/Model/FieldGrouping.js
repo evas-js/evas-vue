@@ -45,8 +45,11 @@ export class Group
             //     // просто набор полей, если это массив или объект
             //     item = (new Block(key, item)).setRegular()
             // }
-            if (Array.isArray(item) || ('object' === typeof item && !(item instanceof Group))) {
-                // превращаем блок, если поля объединены в массив или объект
+            if (Array.isArray(item) || (
+                'object' === typeof item 
+                && [Group, Addon].every(className => !(item instanceof className))
+            )) {
+                // превращаем в блок, если поля объединены в массив или объект
                 item = new Block(key, item)
             }
             if (item instanceof Group && !item.name) {
@@ -89,8 +92,9 @@ export class Group
                 this.names[key] = item
                 if (item instanceof Group) {
                     item.setFields(model)
-                }
-                else if (!(item instanceof Addon)) {
+                } else if (item instanceof Addon) {
+                    this.items[key] = item
+                } else {
                     const field = model.field(item)
                     if (field) this.items[key] = field
                     else delete this.items[key]
