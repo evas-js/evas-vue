@@ -14,7 +14,7 @@ export { MockApi } from './MockApi.js'
 
 export { Field } from './Field/Field.js'
 export { VariableField } from './Field/VariableField.js'
-export { Group, Block, Tabs, Tab } from './Model/FieldGrouping.js'
+export { Group, Block, Tabs, Tab, Addon } from './Model/FieldGrouping.js'
 
 export const EvasVue = new function () {
     this.models = reactive({})
