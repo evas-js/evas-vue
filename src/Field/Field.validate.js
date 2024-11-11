@@ -148,7 +148,7 @@ Field.prototype.validatePattern = function (value) {
 Field.prototype.validateSame = function (value, values) {
     return (
         this.same && this.validateRequired(value) && !this.isEmptyValue(value)
-        && (!values[this.same] || value !== values[this.same])
+        && (!values?.[this.same] || value !== values?.[this.same])
     ) ? this.setError('same') : true
 }
 
@@ -172,8 +172,8 @@ Field.prototype.isValid = function (value, values) {
  * Проверка значения с выбросом исключения.
  * @throws new Error
  */
-Field.prototype.throwIfNotValid = function (value) {
-    if (!this.isValid(value)) {
+Field.prototype.throwIfNotValid = function (value, values) {
+    if (!this.isValid(value, values)) {
         console.error(this.options)
         throw new Error(this.error)
     }

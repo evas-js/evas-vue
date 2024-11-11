@@ -85,6 +85,7 @@ Model.prototype._$fillFields = function (data) {
             this.set(this, field.name, field.convertTypeWithDefault(data[field.name]))
             logger.keyValue(`${this.$entityName}{${id}}.${field.name}`, this[field.name])
         })
+        this.$saveState()
     }, 'fill in the fields')
 }
 /**
