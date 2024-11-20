@@ -29,12 +29,14 @@ Model.fields = function () {
     if (!this._fields) {
         this._fields = {}
         this._fields = this.buildFields(this.setFields())
-        this.displayRules()
+        // this.displayRules()
     }
     return this._fields
 }
 Model.prototype.$fields = function () {
+    // this.$displayRules()
     return this.constructor.fields()
+
 }
 
 /**

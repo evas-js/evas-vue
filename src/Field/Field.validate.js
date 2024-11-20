@@ -51,7 +51,10 @@ Field.prototype.setError = function (type, ctx = this) {
 Field.prototype.validateRequired = function (value) {
     this.error = null
     this.value = value
-    return (this.required && this.isEmptyValue(value)) ? this.setError('required') : true
+    // return (this.required && this.isEmptyValue(value)) ? this.setError('required') : true
+    return !this.required 
+    || (Array.isArray(this.value) ? this.value.length : !this.isEmptyValue(value)) 
+    || this.setError('required')
 }
 
 /**

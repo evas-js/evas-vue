@@ -95,7 +95,7 @@ export class Group
                 } else if (item instanceof Addon) {
                     this.items[key] = item
                 } else {
-                    const field = model.field(item)
+                    const field = model.field?.(item) || model.$field?.(item)
                     if (field) this.items[key] = field
                     else delete this.items[key]
                 }

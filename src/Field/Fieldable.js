@@ -37,5 +37,9 @@ export class Fieldable
      */
     isEmptyValue(value) {
         return [null, undefined].includes(arguments.length > 0 ? value : this.value)
+        // if (arguments.length < 1) value = this.value
+        // return this.type === 'array' && typeof value === 'array' 
+        // ? value.length < 1
+        // : [null, undefined, ''].includes(value)
     }
 }

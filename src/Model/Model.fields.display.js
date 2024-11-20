@@ -12,9 +12,9 @@ import { Addon, Block, Group, Tabs } from './FieldGrouping.js'
 /** @var Object Правила переменного отображения полей */
 Model.rulesForVariableDisplayOfFields = {}
 /** @var Object Правила группировки полей */
-Model._fieldNamesGrouping = null
+Model.prototype._fieldNamesGrouping = null
 /** @var Object правила отображения полей */
-Model._displayRules = null
+// Model.prototype._displayRules = null
 /** @var Array|String|Number|null отображаемая группа полей */
 Model.prototype.$displayGroup = null
 
@@ -22,7 +22,7 @@ Model.prototype.$displayGroup = null
  * Установка правил отображения полей модели.
  * @return Object
  */
-Model.setDisplayRules = function () {
+Model.prototype.$setDisplayRules = function () {
     return {}
 }
 
@@ -30,7 +30,7 @@ Model.setDisplayRules = function () {
  * Установка группировки полей.
  * @return Object|Array
  */
-Model.setFieldGrouping = function () {
+Model.prototype.$setFieldGrouping = function () {
     return {}
 }
 
@@ -44,6 +44,9 @@ Model.block = function (name, items) {
     // return new Block(...prepareArgs(...arguments)) 
     return new Block(name, items) 
 }
+Model.prototype.$block = function () {
+    return this.constructor.block(...arguments)
+}
 /**
  * Группировка полей в группы-блоки.
  * @param Array|Object группы-блоки
@@ -54,6 +57,9 @@ Model.blocks = function(items) {
         return this.block(name, item)
     })
 }
+Model.prototype.$blocks = function () {
+    return this.constructor.blocks(...arguments)
+}
 /**
  * Группировка полей в группы-табы.
  * @param String|Number имя группы
@@ -63,6 +69,9 @@ Model.blocks = function(items) {
 Model.tabs = function (name, items) {
     return new Tabs(name, items)
 }
+Model.prototype.$tabs = function () {
+    return this.constructor.tabs(...arguments)
+}
 /**
  * Дополнительные вставки для отображения.
  * @param mixed данные
@@ -71,6 +80,9 @@ Model.tabs = function (name, items) {
 Model.addon = function (data) {
     return new Addon(data)
 }
+Model.prototype.$addon = function () {
+    return this.constructor.addon(...arguments)
+}
 
 
 /**
@@ -78,41 +90,37 @@ Model.addon = function (data) {
  * @param String|null имя поля
  * @return Object правила поля или полей
  */
-Model.displayRules = function () {
-    if (!this._displayRules) {
-        const rules = this.setDisplayRules()
-        // подтягиваем пропсы из полей
-        Object.keys(rules).forEach(fieldName => {
-            const field = this.field(fieldName)
-            if (!field) {
-                console.log(this.fields())
-                console.error(`Field for displayRule with name "${fieldName}" does not exists`)
-                delete rules[fieldName]
-                return
+Model.prototype.$displayRules = function () {
+    // подтягиваем пропсы из полей
+    const rules = this.$setDisplayRules()
+    Object.entries(rules).forEach(([fieldName, fieldRules]) => {
+        const field = this.$field(fieldName)
+        if (!field) {
+            console.log(this.$fields())
+            console.error(`Field for displayRule with name "${fieldName}" does not exists`)
+            return
+        }
+        if (field?.options) {
+            if ('string' === typeof fieldRules) {
+                fieldRules = { component: fieldRules }
             }
-            let fieldRules = rules[fieldName]
-            if (field?.options) {
-                if ('string' === typeof fieldRules) {
-                    fieldRules = { component: fieldRules }
-                }
-                if (!fieldRules.props) fieldRules.props = {}
-                fieldRules.props.options = field.options
-            }
-            field.setDisplay(fieldRules)
-        })
-        this._displayRules = rules
-    }
-    return this._displayRules
+            if (!fieldRules.props) fieldRules.props = {}
+            fieldRules.props.options = field.options
+        }
+        field.setDisplay(fieldRules)
+    })
+    return rules
 }
 
 /**
  * Получение правил группировки полей.
  * @return Object правила группировки
  */
-Model.fieldNamesGrouping = function () {
-    logger.methodCall(`${this.entityName}.fieldNamesGrouping`, null, () => {
+Model.prototype.$fieldNamesGrouping = function () {
+    this.$displayRules()
+    logger.methodCall(`${this.$entityNameWithId}.$fieldNamesGrouping`, null, () => {
         if (!this._fieldNamesGrouping) {
-            this._fieldNamesGrouping = this.setFieldGrouping() ?? {}
+            this._fieldNamesGrouping = this.$setFieldGrouping() ?? {}
             if (!(this._fieldNamesGrouping instanceof Group)) { 
                 this._fieldNamesGrouping = new Block(this._fieldNamesGrouping)
             }
@@ -150,34 +158,19 @@ Model.fieldNamesGrouping = function () {
 //     })
 // }
 
-Model.fieldsGroup = function (names) {
+Model.prototype.$fieldsGroup = function (names) {
     if (![null, undefined].includes(names) && arguments.length && !Array.isArray(names)) {
         names = arguments.length > 1 ? Array.from(arguments) : [names]
     }
-    return logger.methodCall(`${this.entityName}.fieldsGroup`, arguments, () => {
+    return logger.methodCall(`${this.$entityNameWithId}.$fieldsGroup`, arguments, () => {
         logger.keyValue('names', names)
-        const group = this.fieldNamesGrouping().next(names)
-        logger.keyValue('result group', group)
+        this.$displayGroup = this.$fieldNamesGrouping().next(names)
+        logger.keyValue('this.$displayGroup', this.$displayGroup)
         // if (!group) return group
         // return group.eachFieldsRecursive((key, value) => {
         //     console.log(key, value)
         //     return this.field(value)
         // })
-        return group
-    })
-}
-Model.prototype.$fieldsGroup = function () {
-    return logger.methodCall(`${this.$entityNameWithId}.$fieldsGroup`, arguments, () => {
-        // const group = this.$fieldNamesGroup(...arguments)
-        // logger.keyValue('group', group)
-        // // if (!group) return group
-        // // return group.eachFieldsRecursive((key, value) => {
-        // //     console.log(1, key, value)
-        // //     return this.$field(value)
-        // // })
-        // return group
-        this.$displayGroup = this.constructor.fieldsGroup(...arguments)
-        logger.keyValue('this.$displayGroup', this.$displayGroup)
         return this.$displayGroup
     })
 }
@@ -188,6 +181,7 @@ Model.prototype.$fieldsGroup = function () {
  * @return Array поля доступные к отображению
  */
 Model.prototype.$displayFields = function (group = null) {
+    this.$displayRules()
     return logger.methodCall(`${this.$entityNameWithId}.$displayFields`, arguments, () => {
         if (group) this.$fieldsGroup(group)
         if (!this.$displayGroup) {
@@ -244,7 +238,7 @@ Model.prototype.$applyFieldsDisplayRules = function (fieldNames = null) {
  */
 Model.prototype.$clearFields = function (fieldNames = null) {
     return logger.methodCall(`${this.$entityNameWithId}.$clearFields`, arguments, () => {
-        if (!fieldNames) fieldNames = this.constructor.fieldNames()
+        if (!fieldNames) fieldNames = this.$fieldNames()
         fieldNames.forEach(name => {
             if (name !== 'id') this[name] = this.$state[name]
         })
@@ -257,7 +251,7 @@ Model.prototype.$clearFields = function (fieldNames = null) {
 Model.prototype.$clearDisplayFields = function () {
     logger.methodCall(`${this.$entityNameWithId}.$clearDisplayFields`, arguments, () => {
         const displayFields = this.$displayFields()
-        const clearFields = this.constructor.fieldNames().filter(
+        const clearFields = this.$fieldNames().filter(
             name => !displayFields.includes(name)
         )
         this.$clearFields(clearFields)
