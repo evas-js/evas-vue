@@ -127,9 +127,9 @@ Object.defineProperty(Model.prototype, '$dataToSave', {
         if (!this.$isNew) data[this.constructor.primary] = this.$id
         else {
             let defaultData = {}
-            this.constructor.eachFields(
-                field => field.default && (defaultData[field.name] = this[field.name])
-            )
+            this.constructor.eachFields(field => {
+                if (field.default) defaultData[field.name] = this[field.name]
+            })
             data = { ...data, ...defaultData }
         }
         logger.line('$dataToSave:', data)
