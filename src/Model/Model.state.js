@@ -55,12 +55,15 @@ Object.defineProperty(Model.prototype, '$isDirty', { get: function () {
  */
 Model.prototype.$isDirtyField = function (name) {
     let stateValue = this.$state[name]
-    if (Array.isArray(stateValue) && Array.isArray(this[name])) {
-        return JSON.stringify(stateValue.sort()) !== JSON.stringify(this[name].sort())
+    let value = this[name]
+    if (Array.isArray(stateValue) && Array.isArray(value)) {
+        return JSON.stringify(stateValue.sort()) !== JSON.stringify(value.sort())
     } else if (typeof(stateValue) === 'object' && ![null, undefined].includes(stateValue)) {
-        return JSON.stringify(stateValue) !== JSON.stringify(this[name])
+        return JSON.stringify(stateValue) !== JSON.stringify(value)
+    } else if ([null, undefined].includes(stateValue) && value === '') {
+        return false
     }
-    return stateValue !== this[name]
+    return stateValue !== value
 }
 
 /**
