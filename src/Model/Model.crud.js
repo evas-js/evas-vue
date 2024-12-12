@@ -129,7 +129,7 @@ Object.defineProperty(Model.prototype, '$dataToSave', {
             let defaultData = {}
             this.constructor.eachFields(field => {
                 if (field.default) defaultData[field.name] = this[field.name]
-            })
+            }, this.$applyFieldsDisplayRules())
             data = { ...data, ...defaultData }
         }
         logger.line('$dataToSave:', data)
