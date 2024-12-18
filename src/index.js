@@ -9,6 +9,10 @@ import { Api } from './Api.js'
 import { logger } from './Log.js'
 import { reactive } from 'vue'
 
+import { 
+    ValidateErrorTemplator, defaultValidateErrorSettings 
+} from './Field/ValidateErrorTemplator.js'
+
 export { Model } from './Model/Model.js'
 export { MockApi } from './MockApi.js'
 
@@ -20,6 +24,7 @@ export const EvasVue = new function () {
     this.models = reactive({})
     this.api = null
     this.debug = true
+    this.validateErrorTemplator
 
     this.install = (app, options) => {
         logger.methodCall('install', [app, options], () => {
@@ -27,10 +32,30 @@ export const EvasVue = new function () {
                 if (options.api) this.setApi(options.api)
                 if (options.models) this.setModels(options.models)
                 if (undefined !== options.debug) this.debug = options.debug
+                this.setValidateOptions(options.validate)
             }
             app.config.globalProperties.$models = this.models
             app.config.globalProperties.$api = this.api
         })
+    }
+
+    this.setValidateOptions = (params) => {
+        if (params) {
+            if (typeof params !== 'object') {
+                throw new Error(`options.validate must be an object, ${typeof params} given`)
+            }
+        } else {
+            // set default
+            params = defaultValidateErrorSettings
+        }
+        this.validateErrorTemplator = new ValidateErrorTemplator(
+            params.templates,
+            params.getCurrentLangCb,
+            params.defaultLang
+        )
+    }
+    this.getValidateError = (type, ctx) => {
+        return this.validateErrorTemplator.getError(type, ctx)
     }
 
     this.setApi = (api) => {

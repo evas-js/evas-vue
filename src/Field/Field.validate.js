@@ -7,27 +7,7 @@
 
 import { logger } from '../Log.js'
 import { Field } from './Field.js'
-
-/** @var array маппинг ошибок */
-Field.prototype.errorsMap = {
-    required: (ctx) => `Поле "${ctx.labelOrName}" обязательно для заполнения`,
-    length: (ctx) => {
-        let msg = `Длина поля "${ctx.labelOrName}" должна быть`
-        if (ctx.min) msg += ` от ${ctx.min}`
-        if (ctx.max) msg += ` до ${ctx.max}`
-        return msg + ' символов'
-    },
-    range: (ctx) => {
-        let msg = `Значение поля "${ctx.labelOrName}" должно быть в диапазоне`
-        if (ctx.min) msg += ` от ${ctx.min}`
-        if (ctx.max) msg += ` до ${ctx.max}`
-        return msg
-    },
-    pattern: (ctx) => `Проверьте правильность поля "${ctx.labelOrName}"`,
-    options: (ctx) => `Значение поля "${ctx.labelOrName}" не совпадает с доступными опциями`,
-    same: (ctx) => `Значения полей "${ctx.labelOrName}" и "${ctx.sameLabelOrName}" должны совпадать`,
-    type: (ctx) => `Неверный тип поля "${ctx.labelOrName}", ожидается "${ctx.expectedType}", текущий тип поля "${ctx.currentType}"`
-}
+import { EvasVue } from '../index.js'
 
 /**
  * Установка ошибки.
@@ -36,7 +16,7 @@ Field.prototype.errorsMap = {
  */
 Field.prototype.setError = function (type, ctx = this) {
     return logger.methodCall(`Field{${this.name}}.setError`, arguments, () => {
-        this.error = this.errorsMap[type](ctx)
+        this.error = EvasVue.getValidateError(type, ctx)
         logger.keyValue('error', this.error)
         logger.keyValue('value', this.value)
         return false
