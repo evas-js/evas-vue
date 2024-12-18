@@ -208,7 +208,7 @@ Model.prototype.$applyFieldsDisplayRules = function (fieldNames = null) {
         // if (!fieldNames) fieldNames = this.$fieldNames()
         if (!fieldNames) fieldNames = this.$displayFields()
         return Object.values(fieldNames).reduce((viewFields, fieldName) => {
-            if (!['string', 'number'].includes(typeof fieldName)) {
+            if (!['string', 'number', 'undefined'].includes(typeof fieldName) && fieldName?.name) {
                 fieldName = fieldName.name
             }
             const rule = this.constructor.rulesForVariableDisplayOfFields?.[fieldName]
