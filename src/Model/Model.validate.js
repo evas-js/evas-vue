@@ -48,17 +48,40 @@ Model.prototype.$clearErrors = function () {
 }
 
 /**
+ * Получение обязательных полей
+ * @returns { Object }
+ */
+Model.requiredFields = function () {
+    return Object.fromEntries(
+        Object.entries(this.fields())
+        .filter(([name, field]) => !!field.required)
+    )
+}
+/**
+ * Получение имён обязательных полей
+ * @returns { Array }
+ */
+Model.requiredFieldNames = function () {
+    return Object.keys(this.requiredFields())
+}
+
+/**
  * Получение имен полей, которые поменялись и показываются.
  */
 Model.prototype.$fieldNamesForValidate = function () {
     const dirty = this.$dirtyFields()
     // const rules = this.$applyFieldsDisplayRules()
     const display = this.$displayFields()
+    const required = this.constructor.requiredFieldNames()
     logger.keyValue('dirty', dirty)
     logger.keyValue('display', display)
+    logger.keyValue('required', required)
     logger.keyValue('this', this)
     logger.keyValue('this.$state', this.$state)
-    let fieldNames = this.$isNew && display.length ? display : dirty
+    logger.keyValue('this.$isNew', this.$isNew)
+    let fieldNames = this.$isNew 
+        ? display.concat(dirty)
+        : display.filter(name => required.includes(name) || dirty.includes(name))
     if (Array.isArray(this.constructor.alwaysSend)) {
         logger.keyValue('alwaysSend', this.constructor.alwaysSend)
         fieldNames = fieldNames.concat(this.constructor.alwaysSend)
