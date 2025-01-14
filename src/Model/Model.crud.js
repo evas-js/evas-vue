@@ -101,10 +101,16 @@ Model.delete = function (entity, cb, afterFetch = false) {
         return (new this(entity)).$delete()
     }
     if (entity && ('number' === typeof entity || 'string' === typeof entity)) {
-        this.map.delete(entity)
+        // this.map.delete(entity)
         if (this.useApi && false === afterFetch) {
             // call api delete
-            this.fetchDelete({ id: entity }, cb)
+            this.fetchDelete({ id: entity }, (data, entities, res) => {
+                if (cb) cb(data, entities, res)
+                // console.log(res)
+                if (res.statusCode === 200) {
+                    this.map.delete(entity)
+                }
+            })
         }
     }
 }
