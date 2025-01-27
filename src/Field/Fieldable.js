@@ -14,6 +14,17 @@ export class Fieldable
 
     /** @var Boolean обязательность значения */
     required = true
+    /** @var Number минимальное значение или длина */
+    min = 0
+    /** @var Number максимальное значение или длина */
+    max
+    /** @var String паттерн значения */
+    pattern
+    /** @var String имя совпадающего поля */
+    same
+    /** @var String лейбл совпадающего поля */
+    sameLabel
+    
     /** @var String|Object информация о способе отображения поля */
     display
 

@@ -6,6 +6,7 @@
  */
 
 import { Fieldable } from './Fieldable.js'
+import { Field } from './Field.js'
 
 export class VariableField extends Fieldable {
     /** @var String тип вариативного поля (oneOf, anyOf, allOf) */
@@ -15,11 +16,6 @@ export class VariableField extends Fieldable {
     /** @var Array ошибки валидации */
     errors = []
 
-    // constructor(type, fields) {
-    //     super()
-    //     this.type = type
-    //     this.fields = fields
-    // }
     /**
      * @param object|null свойства поля
      */
@@ -34,20 +30,29 @@ export class VariableField extends Fieldable {
     }
 
     /**
-     * Валидация поля в зависимости от типа.
-     * @param value значение
+     * Валидация вариативного поля в зависимости от типа.
+     * @param { any } value значение
+     * @return { Boolean }
      */
     isValid(value) {
         this.errors = []
-        // if (this.required && this.isEmptyValue()) {
-        //     console.error('Atata!')
-        //     this.errors.push('Atata!')
-        //     return false
-        // }
+        // Валидация вариантов поля
         for (let key in this.fields) {
             this.fields[key].isValid(value)
             this.errors.push(this.fields[key].error)
         }
+        // Базовая валидация поля
+        let entries = ['required', 'min', 'max', 'pattern', 'same', 'sameLabel']
+        .map(key => [key, this[key]])
+        .filter(([, val]) => ![undefined, null].includes(val))
+        if (entries.length > 0) {
+            let field = new Field(Object.fromEntries(entries))
+            if (!field.isValid(value)) {
+                this.errors.pop(field.error)
+                return false
+            }
+        }
+        // Возврат результата в зависимости от вариативного типа
         if (this.type === 'anyOf') return this._anyOfValidate()
         if (this.type === 'allOf') return this._allOfValidate()
         if (this.type === 'oneOf') return this._oneOfValidate()
@@ -65,7 +70,7 @@ export class VariableField extends Fieldable {
     _oneOfValidate() {
         const count = this.errors.filter(error => error === null).length
         if (count > 1) {
-            this.errors.unshift('Ошибка oneOf')
+            this.errors.unshift('there must be one valid field variant')
             return false
         }
         return count === 1 ? true : false

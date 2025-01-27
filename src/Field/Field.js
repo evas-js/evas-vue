@@ -11,18 +11,8 @@ import { Fieldable } from './Fieldable.js'
 export class Field extends Fieldable {
     /** @var String тип */
     type
-    /** @var Number минимальное значение или длина */
-    min = 0
-    /** @var Number максимальное значение или длина */
-    max
-    /** @var String паттерн значения */
-    pattern
     /** @var Object|Array опции значения */
     options
-    /** @var String имя совпадающего поля */
-    same
-    /** @var String лейбл совпадающего поля */
-    sameLabel
     /** @var mixed значение по умолчанию */
     default
     /** @var mixed значение */
@@ -127,22 +117,10 @@ import { FieldableBuilder } from './FieldableBuilder.js'
 export class FieldBuilder extends FieldableBuilder {
     /** @var String имя поля */
     _name
-    /** @var String лейбл поля */
-    _label
     /** @var String тип */
     _type
-    /** @var Number минимальное значение или длина */
-    _min
-    /** @var Number максимальное значение или длина */
-    _max
-    /** @var String паттерн значения */
-    _pattern
     /** @var Object|Array опции значения */
     _options
-    /** @var String имя совпадающего поля */
-    _same
-    /** @var String лейбл совпадающего поля */
-    _sameLabel
 
     _itemOf
 
@@ -158,24 +136,8 @@ export class FieldBuilder extends FieldableBuilder {
         this._name = value
         return this
     }
-    label(value) {
-        this._label = value
-        return this
-    }
     type(value) {
         this._type = value
-        return this
-    }
-    min(value) {
-        this._min = value
-        return this
-    }
-    max(value) {
-        this._max = value
-        return this
-    }
-    pattern(value) {
-        this._pattern = value
         return this
     }
     options(value) {
@@ -196,15 +158,6 @@ export class FieldBuilder extends FieldableBuilder {
             value = Array.from(value)
         }
         this._options = value
-        return this
-    }
-    same(value, label) {
-        this._same = value
-        if (label) this.sameLabel(label)
-        return this
-    }
-    sameLabel(value) {
-        this._sameLabel = value
         return this
     }
 }
