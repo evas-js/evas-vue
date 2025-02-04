@@ -7,23 +7,26 @@
 
 export class Fieldable
 {
-    /** @var String имя поля */
+    /** @var { String } имя поля */
     name
-    /** @var String лейбл поля */
+    /** @var { String } лейбл поля */
     label
 
-    /** @var Boolean обязательность значения */
+    /** @var { Boolean } обязательность значения */
     required = true
-    /** @var Number минимальное значение или длина */
+    /** @var { Number } минимальное значение или длина */
     min = 0
-    /** @var Number максимальное значение или длина */
+    /** @var { Number } максимальное значение или длина */
     max
-    /** @var String паттерн значения */
+    /** @var { String } паттерн значения */
     pattern
-    /** @var String имя совпадающего поля */
+    /** @var { String } имя совпадающего поля */
     same
-    /** @var String лейбл совпадающего поля */
+    /** @var { String } лейбл совпадающего поля */
     sameLabel
+
+    /** @var { String } имя модели  */
+    modelName
     
     /** @var String|Object информация о способе отображения поля */
     display
@@ -33,8 +36,8 @@ export class Fieldable
 
     /**
      * Установка информации о способе отображения поля.
-     * @param mixed информации о способе отображения поля
-     * @return this
+     * @param { any } display информации о способе отображения поля
+     * @return { this }
      */
     setDisplay(display) {
         this.display = display
@@ -42,9 +45,19 @@ export class Fieldable
     }
 
     /**
+     * Установка имени модели.
+     * @param { String } name имя модели
+     * @return { this }
+     */
+    setModelName(name) {
+        this.modelName = name
+        return this
+    }
+
+    /**
      * Проверка на пустое значение.
-     * @param mixed|null значение
-     * @return Boolean
+     * @param { any } value значение
+     * @return { Boolean }
      */
     isEmptyValue(value) {
         return [null, undefined].includes(arguments.length > 0 ? value : this.value)
