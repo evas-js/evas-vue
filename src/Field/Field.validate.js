@@ -11,10 +11,12 @@ import { EvasVue } from '../index.js'
 
 /**
  * Установка ошибки.
- * @param string тип ошибки
- * @return bool false
+ * @param { String } type тип ошибки
+ * @param { Object } additionalCtx дополнительный контекст
+ * @return { Boolean } false
  */
-Field.prototype.setError = function (type, ctx = this) {
+Field.prototype.setError = function (type, additionalCtx = {}) {
+    const ctx = { ...this, ...additionalCtx }
     return logger.methodCall(`Field{${this.name}}.setError`, arguments, () => {
         this.error = EvasVue.getValidateError(type, ctx)
         logger.keyValue('error', this.error)
@@ -25,8 +27,8 @@ Field.prototype.setError = function (type, ctx = this) {
 
 /**
  * Валидации обязательности значения.
- * @param mixed значение
- * @return bool
+ * @param { any } value значение
+ * @return { Boolean }
  */
 Field.prototype.validateRequired = function (value) {
     this.error = null
@@ -38,9 +40,9 @@ Field.prototype.validateRequired = function (value) {
 }
 
 /**
- * Валидации типа значения.
- * @param mixed значение
- * @return bool
+ * Валидация типа значения.
+ * @param { any } value значение
+ * @return { Boolean }
  */
 Field.prototype.validateType = function (value) {
     if (this.isEmptyValue(value) && !this.required) return true
@@ -65,13 +67,13 @@ Field.prototype.validateType = function (value) {
         return true
     }
     console.log(value, currentType, expectedType)
-    return this.setError('type', { labelOrName: this.labelOrName, currentType, expectedType })
+    return this.setError('type', { currentType, expectedType })
 }
 
 /**
- * Валидатор длины значение.
- * @param mixed значение
- * @return bool
+ * Валидация длины значение.
+ * @param { any } value значение
+ * @return { Boolean }
  */
 Field.prototype.validateLength = function (value) {
     return (
@@ -84,9 +86,9 @@ Field.prototype.validateLength = function (value) {
 }
 
 /**
- * Валидатор числового диапазона значения.
- * @param mixed значение
- * @return bool
+ * Валидация числового диапазона значения.
+ * @param { any } value значение
+ * @return { Boolean }
  */
 Field.prototype.validateRange = function (value) {
     return (
@@ -99,9 +101,9 @@ Field.prototype.validateRange = function (value) {
 }
 
 /**
- * Валидатор соответствия значения опциям.
- * @param mixed значение
- * @return bool
+ * Валидация соответствия значения опциям.
+ * @param { any } value значение
+ * @return { Boolean }
  */
 Field.prototype.validateOptions = function (value) {
     this.validateRequired(value)
@@ -115,7 +117,9 @@ Field.prototype.validateOptions = function (value) {
 }
 
 /**
- * @todo Валидатор паттерна значения.
+ * Валидация паттерна значения.
+ * @param { any } value значение
+ * @return { Boolean }
  */
 Field.prototype.validatePattern = function (value) {
     return (
@@ -124,9 +128,10 @@ Field.prototype.validatePattern = function (value) {
 }
 
 /**
- * Валидатор совпадения значения с другим полем.
- * @param mixed значение
- * @return bool
+ * Валидация совпадения значения с другим полем.
+ * @param { any } value значение текущего поля
+ * @param { Object } values значения всех полей по именам
+ * @return { Boolean }
  */
 Field.prototype.validateSame = function (value, values) {
     return (
@@ -137,7 +142,9 @@ Field.prototype.validateSame = function (value, values) {
 
 /**
  * Проверка значения.
- * @return bool
+ * @param { any } value значение текущего
+ * @param { Object } values значения всех полей по именам
+ * @return { Boolean }
  */
 Field.prototype.isValid = function (value, values) {
     this.error = null
@@ -153,7 +160,10 @@ Field.prototype.isValid = function (value, values) {
 
 /**
  * Проверка значения с выбросом исключения.
- * @throws new Error
+ * @param { any } value значение текущего
+ * @param { Object } values значения всех полей по именам
+ * @return { Boolean }
+ * @throws { Error }
  */
 Field.prototype.throwIfNotValid = function (value, values) {
     if (!this.isValid(value, values)) {
