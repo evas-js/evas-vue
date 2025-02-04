@@ -11,18 +11,18 @@ import { VariableField, VariableFieldBuilder } from '../Field/VariableField.js'
 
 /**
  * Установка полей модели.
- * @return Array
+ * @return { Array } поля для установки
  */
 Model.setFields = function () {
     return []
 }
 
-/** @var Array поля, отправляемые в любом случае, даже если не менялись */
+/** @var { Array } alwaysSend поля, отправляемые в любом случае, даже если не менялись */
 Model.alwaysSend = null
 
 /**
  * Получение установленных полей модели.
- * @return Object Field by names
+ * @return { Object } Field by names
  */
 Model.fields = function () {
     if (this.isRootModel()) return {}
@@ -41,8 +41,8 @@ Model.prototype.$fields = function () {
 
 /**
  * Вспомогательный метод для установки полей.
- * @param Array поля или сборщики полей
- * @param String|null имя группы полей
+ * @param { Array } поля или сборщики полей
+ * @param { String|null } имя группы полей
  */
 Model.buildFields = function (fields, name = null) {
     let resultFields = {}
@@ -81,6 +81,7 @@ Model.buildFields = function (fields, name = null) {
 
         if (field instanceof Field || field instanceof VariableField) {
             field.name = name || key
+            field.setModelName(this.entityName)
             resultFields[key] = field
         }
     }
@@ -89,7 +90,7 @@ Model.buildFields = function (fields, name = null) {
 
 /**
  * Получение имён полей модели.
- * @return Array
+ * @return { Array }
  */
 Model.fieldNames = function () {
     return Object.keys(this.fields())
@@ -100,8 +101,8 @@ Model.prototype.$fieldNames = function () {
 
 /**
  * Получение поля по имени.
- * @param string имя поля
- * @return Field
+ * @param { String } name имя поля
+ * @return { Field }
  */
 Model.field = function (name) {
     return this.fields()[name]
@@ -112,8 +113,8 @@ Model.prototype.$field = function (name) {
 
 /**
  * Получение опций поля.
- * @param string имя поля
- * @return Object
+ * @param { String } name имя поля
+ * @return { Object }
  */
 Model.fieldOptions = function (name) {
     let options = this.field(name)?.options
@@ -135,9 +136,9 @@ Model.prototype.$fieldOptions = function (name) {
 
 /**
  * Итеративная обработка полей колбэком.
- * @param Function колбэк
- * @param Array|null имена полей для обработки или все
- * @return Boolean false - ничего не произошло, true - что-то произошло во время обработки
+ * @param { Function } cb колбэк
+ * @param { Array|null} names  имена полей для обработки или все
+ * @return { Boolean } false - ничего не произошло, true - что-то произошло во время обработки
  */
 Model.eachFields = function (cb, names) {
     if (!names) names = this.fieldNames()
