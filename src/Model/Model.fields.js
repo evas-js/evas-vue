@@ -6,8 +6,7 @@
  */
 
 import { Model } from './Model.js'
-import { Field, FieldBuilder } from '../Field/Field.js'
-import { VariableField, VariableFieldBuilder } from '../Field/VariableField.js'
+import { Fieldable, FieldableBuilder, FieldBuilder, VariableFieldBuilder } from '../Field'
 
 /**
  * Установка полей модели.
@@ -41,51 +40,57 @@ Model.prototype.$fields = function () {
 
 /**
  * Вспомогательный метод для установки полей.
- * @param { Array } поля или сборщики полей
- * @param { String|null } имя группы полей
+ * @param { Array } fields поля или сборщики полей
+ * @param { String|null } name имя группы полей
+ * @return { Object } маппинг полей по именам
  */
 Model.buildFields = function (fields, name = null) {
-    let resultFields = {}
-    for (let key in fields) {
-        let field = fields[key]
+    return Object.entries(fields).reduce((filtered, [key, val]) => {
+        if (val instanceof FieldableBuilder) filtered[key] = val.build(key, this)
+        return filtered
+    }, {})
+    // let resultFields = {}
+    // for (let key in fields) {
+    //     let field = fields[key]
 
-        if (field instanceof VariableFieldBuilder) {
-            field = new VariableField(field.export())
-        }
+    //     if (field instanceof VariableFieldBuilder) {
+    //         field = new VariableField(field.export())
+    //     }
 
-        if (field instanceof VariableField) {
-            field.fields = this.buildFields(field.fields, key)
-        }
+    //     if (field instanceof VariableField) {
+    //         field.fields = this.buildFields(field.fields, key)
+    //     }
 
-        if (field instanceof FieldBuilder) {
-            field = new Field(field.export())
+    //     if (field instanceof FieldBuilder) {
+    //         field = new Field(field.export())
 
-            if (field.itemOf) {
-                if (field.itemOf instanceof FieldBuilder) {
-                    field.itemOf = new Field(field.itemOf.export())
-                }
+    //         if (field.itemOf) {
+    //             if (field.itemOf instanceof FieldBuilder) {
+    //                 field.itemOf = new Field(field.itemOf.export())
+    //             }
 
-                if (field.itemOf instanceof VariableFieldBuilder) {
-                    field.itemOf = new VariableField(field.itemOf.export())
-                }
+    //             if (field.itemOf instanceof VariableFieldBuilder) {
+    //                 field.itemOf = new VariableField(field.itemOf.export())
+    //             }
 
-                if (field.itemOf instanceof VariableField) {
-                    field.itemOf.fields = this.buildFields(field.itemOf.fields, key)
-                }
+    //             if (field.itemOf instanceof VariableField) {
+    //                 field.itemOf.fields = this.buildFields(field.itemOf.fields, key)
+    //             }
 
-                if (field.itemOf instanceof Field || field.itemOf instanceof VariableField) {
-                    field.itemOf.name = name || key
-                }
-            }
-        }
+    //             if (field.itemOf instanceof Field || field.itemOf instanceof VariableField) {
+    //                 field.itemOf.name = name || key
+    //             }
+    //         }
+    //     }
 
-        if (field instanceof Field || field instanceof VariableField) {
-            field.name = name || key
-            field.setModelName(this.entityName)
-            resultFields[key] = field
-        }
-    }
-    return resultFields
+    //     if (field instanceof Field || field instanceof VariableField) {
+    //         field.name = name || key
+    //         console.warn('call setModelName', this.entityName)
+    //         field.setModelName(this.entityName)
+    //         resultFields[key] = field
+    //     }
+    // }
+    // return resultFields
 }
 
 /**
@@ -105,7 +110,18 @@ Model.prototype.$fieldNames = function () {
  * @return { Field }
  */
 Model.field = function (name) {
-    return this.fields()[name]
+    // return this.fields()[name]
+    let reference = this.fields()
+    const path = (`${name ?? ''}`).split('->')
+
+    path.forEach(key => {
+        while (reference instanceof Fieldable) {
+            reference = reference.itemOf
+        }
+        reference = reference[key]
+    })
+
+    return reference instanceof Fieldable ? reference : undefined
 }
 Model.prototype.$field = function (name) {
     return this.constructor.field(name)
@@ -120,11 +136,7 @@ Model.fieldOptions = function (name) {
     let options = this.field(name)?.options
     if (!options) return {}
     if (Array.isArray(options)) {
-        let res = {}
-        options.forEach(option => {
-            res[option] = option
-        })
-        return res
+        return Object.fromEntries(options.map(option => [option, option]))
     }
     if ('object' === typeof options) {
         return { ...options }

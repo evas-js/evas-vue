@@ -9,15 +9,18 @@ import { Api } from './Api.js'
 import { logger } from './Log.js'
 import { reactive } from 'vue'
 
-import { 
-    ValidateErrorTemplator, defaultValidateErrorSettings 
-} from './Field/ValidateErrorTemplator.js'
+// import { 
+//     ValidateErrorTemplator, defaultValidateErrorSettings 
+// } from './Field/ValidateErrorTemplator.js'
 
 export { Model } from './Model/Model.js'
 export { MockApi } from './MockApi.js'
 
-export { Field } from './Field/Field.js'
-export { VariableField } from './Field/VariableField.js'
+// export { Field } from './Field/Field.js'
+// export { VariableField } from './Field/VariableField.js'
+import { ValidateErrorTemplator, defaultValidateErrorSettings } from './Field'
+export { Field, VariableField } from './Field'
+
 export { Group, Block, Tabs, Tab, Addon } from './Model/FieldGrouping.js'
 
 export const EvasVue = new function () {

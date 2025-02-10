@@ -9,24 +9,24 @@ import { Fieldable } from './Fieldable.js'
 import { Field } from './Field.js'
 
 export class VariableField extends Fieldable {
-    /** @var String тип вариативного поля (oneOf, anyOf, allOf) */
+    /** @var { String } тип вариативного поля (oneOf, anyOf, allOf) */
     type
-    /** @var FieldBuilder[]|Field[] поля */
-    fields
-    /** @var Array ошибки валидации */
+    /** @var { FieldableBuilder[]|Fieldable[] } поля */
+    fields = []
+    /** @var { Array } ошибки валидации */
     errors = []
 
-    /**
-     * @param object|null свойства поля
-     */
-    constructor(props) {
-        super(props)
-        setProps(this, props)
-    }
-
-    /** Геттер первой найденной ошибки. */
+    /** @var { String|null } первая найденная ошибка */
     get error() {
         return this.errors.find(error => error !== null) || null
+    }
+
+    /**
+     * @param { Object|null } props свойства поля
+     */
+    constructor(props) {
+        super()
+        this.setProps(props)
     }
 
     /**
@@ -37,9 +37,9 @@ export class VariableField extends Fieldable {
     isValid(value) {
         this.errors = []
         // Валидация вариантов поля
-        for (let key in this.fields) {
-            this.fields[key].isValid(value)
-            this.errors.push(this.fields[key].error)
+        for (const field of this.fields) {
+            field.isValid(value)
+            this.errors.push(field.error)
         }
         // Базовая валидация поля
         let entries = ['required', 'min', 'max', 'pattern', 'same', 'sameLabel']
@@ -79,64 +79,16 @@ export class VariableField extends Fieldable {
 
     /**
      * Конвертация типа значения.
-     * @param mixed значение
-     * @return mixed значение
+     * @param { any } value значение
+     * @return { any } значение
      */
     convertType(value) {
-        for (let key in this.fields) {
-            if (this.fields[key].isValid(value)) {
-                return this.fields[key].convertTypeWithDefault(value)
-            }
+        for (const field of this.fields) {
+            if (field.isValid(value)) return field.convertTypeWithDefault(value)
         }
         return value
     }
     convertTypeWithDefault(value) {
         return this.convertType(value)
-    }
-}
-
-/**
- * Сборщик вариативного поля.
- * @package evas-vue
- * @author Egor Vasyakin <egor@evas-php.com>
- * @license CC-BY-4.0
- */
-
-import { FieldableBuilder } from './FieldableBuilder.js'
-
-export class VariableFieldBuilder extends FieldableBuilder {
-    /** @var String тип вариативного поля (oneOf, anyOf, allOf) */
-    _type
-    /** @var FieldBuilder[]|Field[] поля */
-    _fields
-
-    /**
-     * @param object|null свойства поля
-     */
-    constructor(props) {
-        super(props)
-        setProps(this, props)
-    }
-}
-
-/**
- * Конструктор.
- * @param object|null свойства поля
- */
-function setProps(ctx, props) {
-    if (props) {
-        if (props instanceof VariableFieldBuilder) {
-            props = props.export()
-        }
-        if ('object' === typeof props && !Array.isArray(props)) for (let key in props) {
-            ctx[key] = props[key]
-        }
-        else {
-            console.error(
-                'Variable field props must be an object or an instanceof VariableFieldBuilder,',
-                `${typeof props} given`,
-                props
-            )
-        }
     }
 }

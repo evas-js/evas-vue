@@ -5,31 +5,35 @@
  * @license CC-BY-4.0
  */
 
-export class FieldableBuilder {
-    /** @var String лейбл поля */
+import { Field } from './Field.js'
+import { VariableField } from './VariableField.js'
+import { PropsWritable } from './PropsWritable.js'
+
+export class FieldableBuilder extends PropsWritable {
+    /** @var { String } лейбл поля */
     _label
-    /** @var Boolean обязательность значения */
+    /** @var { Boolean } обязательность значения */
     _required = true
-    /** @var Number минимальное значение или длина */
+    /** @var { Number } минимальное значение или длина */
     _min
-    /** @var Number максимальное значение или длина */
+    /** @var { Number } максимальное значение или длина */
     _max
-    /** @var String паттерн значения */
+    /** @var { String } паттерн значения */
     _pattern
-    /** @var String имя совпадающего поля */
+    /** @var { String } имя совпадающего поля */
     _same
-    /** @var String лейбл совпадающего поля */
+    /** @var { String } лейбл совпадающего поля */
     _sameLabel
-    /** @var mixed значение по умолчанию */
+    /** @var { any } значение по умолчанию */
     _default
-    /** @var String|Object информация о способе отображения поля */
+    /** @var { String|Object } информация о способе отображения поля */
     _display
 
     /**
      * 
      * @param Установка лейбла поля.
      * @param { any } значение
-     * @returns this
+     * @returns { this }
      */
     label(value) {
         this._label = value
@@ -38,8 +42,8 @@ export class FieldableBuilder {
 
     /**
      * Установка поля обязательным.
-     * @param Boolean|True установить обязательным
-     * @return this
+     * @param { Boolean|true } value установить обязательным
+     * @return { this }
      */
     required(value = true) {
         this._required = value
@@ -47,8 +51,8 @@ export class FieldableBuilder {
     }
     /**
      * Установка поля необязательным.
-     * @param Boolean|True установить необязательным
-     * @return this
+     * @param { Boolean|true } value установить необязательным
+     * @return { this }
      */
     nullable(value = true) {
         this._required = !value
@@ -80,8 +84,8 @@ export class FieldableBuilder {
 
     /**
      * Установка значения по умолчанию.
-     * @param mixed значение по умолчанию
-     * @return this
+     * @param { any } value значение по умолчанию
+     * @return { this }
      */
     default(value) {
         this._default = value
@@ -90,8 +94,8 @@ export class FieldableBuilder {
 
     /**
      * Установка информации о способе отображения поля.
-     * @param mixed информации о способе отображения поля
-     * @return this
+     * @param { any } value  информации о способе отображения поля
+     * @return { this }
      */
     display(value) {
         this._display = value
@@ -101,14 +105,36 @@ export class FieldableBuilder {
 
     /**
      * Экспорт свойств для поля/вариативного поля.
-     * @return Object
+     * @return { Object }
      */
     export() {
-        let data = {}
-        Object.entries(this).forEach(([key, value]) => {
-            key = key.substring(1)
-            data[key] = value
-        })
-        return data
+        return Object.fromEntries(Object.entries(this).map(([key, val]) => [key.substring(1), val]))
     }
+
+    build(name, model) {
+        switch (this.constructor.name) {
+            case 'FieldBuilder':
+                return recursiveBuild(name, model, new Field(this), 'itemOf')
+            case 'VariableFieldBuilder':
+                return recursiveBuild(name, model, new VariableField(this), 'fields', name)
+        }
+    }
+}
+
+function recursiveBuild(name, model, instance, children, alias = null) {
+    const nested = instance[children]
+
+    if (nested) {
+        if (nested.build) {
+            instance[children] = nested.build?.(name, model)
+        } else {
+            for (let key in nested) {
+                nested[key] = nested[key].build?.(alias ?? key, model)
+            }
+        }
+    }
+
+    instance.name ??= name
+    instance.setModel(model)
+    return instance
 }

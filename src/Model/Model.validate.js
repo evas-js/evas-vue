@@ -108,23 +108,23 @@ Model.prototype.$validate = function (fieldNames = null) {
         this.$clearErrors()
         this.constructor.eachFields((field) => {
             if (!(field instanceof VariableField || field instanceof Field)) return
-            console.warn(field.name, this[field.name])
+            // console.warn(field.name, this[field.name])
 
             if (!field.isValid(this[field.name], this)) {
                 this.constructor.handleValidateError(field, field.error)
                 this.$errors.push(field.error)
             }
 
-            if (Array.isArray(field.value) && field.itemOf) {
-                this[field.name] = field.value = field.value.map(item => {
-                    // field.itemOf.name = `${field.name} [${index}]`
-                    if (!field.itemOf.isValid(item, this)) {
-                        this.constructor.handleValidateError(field.itemOf, field.itemOf.error)
-                        this.$errors.push(field.itemOf.error)
-                    }
-                    return field.itemOf.convertType(item)
-                })
-            }
+            // if (Array.isArray(field.value) && field.itemOf) {
+            //     this[field.name] = field.value = field.value.map(item => {
+            //         // field.itemOf.name = `${field.name} [${index}]`
+            //         if (!field.itemOf.isValid(item, this)) {
+            //             this.constructor.handleValidateError(field.itemOf, field.itemOf.error)
+            //             this.$errors.push(field.itemOf.error)
+            //         }
+            //         return field.itemOf.convertType(item)
+            //     })
+            // }
 
         }, fieldNames)
         return this.$errors.length < 1

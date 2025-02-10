@@ -33,9 +33,10 @@ export const logger = new class {
     }
 
     returnGroup(cb, ...messages) {
-        this.group(...messages)
+        // this.group(...messages)
+        this.line(...messages)
         let res = cb()
-        this.groupEnd()
+        // this.groupEnd()
         return res
     }
 

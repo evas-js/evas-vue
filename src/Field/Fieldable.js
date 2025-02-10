@@ -5,8 +5,9 @@
  * @license CC-BY-4.0
  */
 
-export class Fieldable
-{
+import { PropsWritable } from './PropsWritable.js'
+
+export class Fieldable  extends PropsWritable {
     /** @var { String } имя поля */
     name
     /** @var { String } лейбл поля */
@@ -25,32 +26,49 @@ export class Fieldable
     /** @var { String } лейбл совпадающего поля */
     sameLabel
 
-    /** @var { String } имя модели  */
-    modelName
+    /** @var { any } значение по умолчанию */
+    default
+
+    /** @var { Model } модель поля */
+    model
     
     /** @var String|Object информация о способе отображения поля */
     display
 
-    /** Геттер лейбла или имени поля. */
+    /** @var { any } лейбл или имя поля */
     get labelOrName() { return this.label || this.name }
+
+    /** @var { any } лейбл или имя совпадающего поля */
+    get sameLabelOrName() { return this.sameLabel || this.same }
+
+    /** @var { String } имя модели  */
+    get modelName() { return this.model.entityName }
 
     /**
      * Установка информации о способе отображения поля.
-     * @param { any } display информации о способе отображения поля
+     * @param { any } value информации о способе отображения поля
      * @return { this }
      */
-    setDisplay(display) {
-        this.display = display
+    setDisplay(value) {
+        this.display = value
         return this
     }
 
     /**
-     * Установка имени модели.
-     * @param { String } name имя модели
+     * Получение значения по умолчанию.
+     * @return { any }
+     */
+    getDefault() {
+        return 'function' === typeof this.default ? this.default() : this.default
+    }
+
+    /**
+     * Установка модели поля.
+     * @param { Model } value модель
      * @return { this }
      */
-    setModelName(name) {
-        this.modelName = name
+    setModel(value) {
+        this.model = value
         return this
     }
 

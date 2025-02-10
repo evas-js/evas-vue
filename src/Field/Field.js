@@ -7,26 +7,33 @@
 
 // import { FieldBuilder } from './FieldBuilder.js'
 import { Fieldable } from './Fieldable.js'
+// раширение поля поддержкой валидации
+// require('./Field.validate.js')
+import { setFieldValidate } from './Field.validate.js'
 
 export class Field extends Fieldable {
-    /** @var String тип */
+    /** @var { String } тип */
     type
-    /** @var Object|Array опции значения */
+    /** @var { Object|Array } опции значения */
     options
-    /** @var mixed значение по умолчанию */
-    default
-    /** @var mixed значение */
+    /** @var { any } значение */
     value
-    /** @var String ошибка валидации */
+    /** @var { String } ошибка валидации */
     error
 
+    /** @var { Fieldable|Object } вложенное поле для массива или маппинг полей для объекта */
     itemOf
 
-    /** Геттер лейбла или имени совпадающего поля. */
-    get sameLabelOrName() { return this.sameLabel || this.same }
+    /**
+     * @param { Object|null } props свойства поля
+     */
+    constructor(props) {
+        super()
+        this.setProps(props)
+    }
 
     /**
-     * Геттер строкового типа поля.
+     * Строковый ли тип поля.
      * @return Boolean
      */
     get isStringType() {
@@ -34,49 +41,33 @@ export class Field extends Fieldable {
     }
 
     /**
-     * Геттер числового типа поля.
-     * @return Boolean
+     * Числовое ли тип поля.
+     * @return { Boolean }
      */
     get isNumberType() {
         return ['number', 'int', 'integer', 'float'].includes(this.type)
     }
 
     /**
-     * Геттер булевого типа поля.
-     * @return Boolean
+     * Булевый ли тип поля.
+     * @return { Boolean }
      */
     get isBooleanType() {
-        return  ['bool', 'boolean'].includes(this.type)
+        return ['bool', 'boolean'].includes(this.type)
     }
 
     /**
-     * Геттер массива типа поля.
-     * @return Boolean
+     * Массив ли тип поля.
+     * @return { Boolean }
      */
     get isArrayType() {
         return 'array' === this.type;
     }
 
     /**
-     * @param object|null свойства поля
-     */
-    constructor(props) {
-        super(props)
-        setProps(this, props)
-    }
-
-    /**
-     * Получение значения по умолчанию.
-     * @return mixed
-     */
-    getDefault() {
-        return 'function' === typeof this.default ? this.default() : this.default
-    }
-
-    /**
      * Конвертация типа значения.
-     * @param mixed значение
-     * @return mixed значение
+     * @param { any } значение
+     * @return { any } значение
      */
     convertType(value) {
         if (!this.required && this.isEmptyValue(value)) return value
@@ -93,94 +84,12 @@ export class Field extends Fieldable {
 
     /**
      * Подучение значения конвертированного типа или дефолтного значения.
-     * @param mixed значение
-     * @return mixed значение
+     * @param { any } значение
+     * @return { any } значение
      */
     convertTypeWithDefault(value) {
-        // return this.convertType(value !== undefined ? value : this.getDefault())
-        // return this.convertType(![undefined, null].includes(value) ? value : this.getDefault())
         return [undefined, null].includes(value) ? this.getDefault() : this.convertType(value)
     }
 }
 
-// раширение поля поддержкой валидации
-require('./Field.validate.js')
-
-/**
- * Сборщик поля.
- * @package evas-vue
- * @author Egor Vasyakin <egor@evas-php.com>
- * @license CC-BY-4.0
- */
-import { FieldableBuilder } from './FieldableBuilder.js'
-
-export class FieldBuilder extends FieldableBuilder {
-    /** @var String имя поля */
-    _name
-    /** @var String тип */
-    _type
-    /** @var Object|Array опции значения */
-    _options
-
-    _itemOf
-
-    /**
-     * @param object|null свойства поля
-     */
-    constructor(props) {
-        super(props)
-        setProps(this, props)
-    }
-
-    name(value) {
-        this._name = value
-        return this
-    }
-    type(value) {
-        this._type = value
-        return this
-    }
-    options(value) {
-        if (!value) {
-            return console.error('Options not setting')
-        }
-        if (['string', 'number'].includes(typeof value)) {
-            value = arguments
-        }
-        if (!(Array.isArray(value) || 'object' === typeof value)) {
-            return console.error(
-                `Options of the field ${this._name} must be an array or an object,`,
-                `${typeof value} given`, 
-                value
-            )
-        }
-        if (Object.prototype.toString.call(value) === '[object Arguments]') {
-            value = Array.from(value)
-        }
-        this._options = value
-        return this
-    }
-}
-
-
-/**
- * Установка свойств для конструктора.
- * @param object|null свойства поля
- */
-function setProps(ctx, props) {
-    if (props) {
-        if (props instanceof FieldBuilder) {
-            props = props.export()
-        }
-        if ('object' === typeof props && !Array.isArray(props)) for (let key in props) {
-            ctx[key] = props[key]
-        }
-        else {
-            console.error(
-                'Field props must be an object or an instanceof FieldBuilder,',
-                `${typeof props} given`,
-                props
-            )
-        }
-    }
-}
+setFieldValidate(Field)
