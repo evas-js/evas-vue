@@ -7,7 +7,7 @@
 
 import { logger } from '../Log.js'
 import { Model } from './Model.js'
-import { Addon, Block, Group, Tabs } from './FieldGrouping.js'
+import { Addon, Block, Group, List, Tabs } from './FieldGrouping.js'
 
 /** @var Object Правила переменного отображения полей */
 Model.rulesForVariableDisplayOfFields = {}
@@ -59,6 +59,17 @@ Model.blocks = function(items) {
 }
 Model.prototype.$blocks = function () {
     return this.constructor.blocks(...arguments)
+}
+/**
+ * Группировка полей в список повторяющегося блока.
+ * @param Array|Object группы-блоки
+ * @return Array
+ */
+Model.list = function (name, items) {
+    return new List(name, items)
+}
+Model.prototype.$list = function () {
+    return this.constructor.list(...arguments)
 }
 /**
  * Группировка полей в группы-табы.

@@ -184,6 +184,12 @@ Model.boolean = function (_default) {
 Model.array = function (_itemOf, _default) {
     return new FieldBuilder({ _itemOf, _default, _type: 'array' })
 }
+Model.object = function (_itemOf, _default = {}) {
+    return new FieldBuilder({ _itemOf, _default, _type: 'object' })
+}
+Model.null = function () {
+    return new FieldBuilder({ _type: 'null' })
+}
 // Model.uuid = function (_default) {
 //     return new FieldBuilder({ _default, _type: 'uuid' })
 // }

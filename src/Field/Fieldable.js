@@ -7,7 +7,10 @@
 
 import { PropsWritable } from './PropsWritable.js'
 
-export class Fieldable  extends PropsWritable {
+export class Fieldable extends PropsWritable {
+    // static emptyValues = [null, undefined]
+    static emptyValues = [null, undefined, '']
+
     /** @var { String } имя поля */
     name
     /** @var { String } лейбл поля */
@@ -78,10 +81,6 @@ export class Fieldable  extends PropsWritable {
      * @return { Boolean }
      */
     isEmptyValue(value) {
-        return [null, undefined].includes(arguments.length > 0 ? value : this.value)
-        // if (arguments.length < 1) value = this.value
-        // return this.type === 'array' && typeof value === 'array' 
-        // ? value.length < 1
-        // : [null, undefined, ''].includes(value)
+        return this.constructor.emptyValues.includes(arguments.length > 0 ? value : this.value)
     }
 }

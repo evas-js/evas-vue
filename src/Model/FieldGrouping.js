@@ -6,8 +6,7 @@
  */
 import { logger } from '../Log.js'
 
-export class Group
-{
+export class Group {
     type = 'group'
     name
     items
@@ -104,40 +103,6 @@ export class Group
         })
     }
 
-    // eachFieldsRecursive(cb) {
-    //     const items = {}
-    //     this.eachItems((key, item) => {
-    //         let field
-    //         if (item instanceof Group) {
-    //             // item = Object.assign({}, item)
-    //             // item.setItems(item.eachFieldsRecursive(cb))
-    //             field = item.eachFieldsRecursive(cb)
-    //         } else if (item instanceof Addon) {
-    //             field = item
-    //         } else {
-    //             field = cb(key, item)
-    //         }
-    //         if (field) items[key] = field
-    //     })
-    //     // console.log(this.constructor)
-    //     // console.error(items)
-    //     // // return items
-    //     // // const result = structuredClone(this)
-    //     // // const result = Object.assign({}, this)
-    //     // // result.items = items
-    //     // // const result = new Group(this.name, items)
-    //     // console.warn(this.name, items)
-    //     const result = new this.constructor(this.name)
-    //     // // const result = new this.constructor(this.name)
-    //     // // result.items = items
-    //     result.setItems(items)
-    //     console.log('eachFieldsRecursive')
-    //     console.error(items, result)
-    //     // console.error(result)
-    //     return result
-    //     // return this
-    // }
-
     concatFields() {
         let fields = []
         this.eachItems((key, item) => {
@@ -153,8 +118,7 @@ export class Group
     }
 }
 
-export class Tabs extends Group
-{
+export class Tabs extends Group {
     type = 'tabs'
     // selectedIndex
     
@@ -192,8 +156,7 @@ export class Tabs extends Group
     }
 }
 
-export class Tab extends Group
-{
+export class Tab extends Group {
     type = 'tab'
     // selected = false
     // parent
@@ -205,8 +168,7 @@ export class Tab extends Group
     }
 }
 
-export class Block extends Group
-{
+export class Block extends Group {
     type = 'block'
     // regular = false
     setItems(items) {
@@ -217,8 +179,11 @@ export class Block extends Group
     // }
 }
 
-export class Addon
-{
+export class List extends Block {
+    type = 'list'
+}
+
+export class Addon{
     type = 'addon'
     // data
     constructor(data) {
