@@ -138,6 +138,11 @@ Object.defineProperty(Model.prototype, '$dataToSave', {
             }, this.$applyFieldsDisplayRules())
             data = { ...data, ...defaultData }
         }
+        this.constructor.eachFields(field => {
+            if (!field.required && field.type === 'string' &&  data[field.name] === '') {
+                data[field.name] = null
+            }
+        })
         logger.line('$dataToSave:', data)
         return data
     }
