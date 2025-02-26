@@ -5,8 +5,6 @@
  * @license CC-BY-4.0
  */
 
-import { Field } from './Field.js'
-import { VariableField } from './VariableField.js'
 import { PropsWritable } from './PropsWritable.js'
 
 export class FieldableBuilder extends PropsWritable {
@@ -111,30 +109,25 @@ export class FieldableBuilder extends PropsWritable {
         return Object.fromEntries(Object.entries(this).map(([key, val]) => [key.substring(1), val]))
     }
 
-    build(name, model) {
-        switch (this.constructor.name) {
-            case 'FieldBuilder':
-                return recursiveBuild(name, model, new Field(this), 'itemOf')
-            case 'VariableFieldBuilder':
-                return recursiveBuild(name, model, new VariableField(this), 'fields', name)
-        }
+    build() {
+        console.warn('FieldableBuilder can not build. Use FieldBuilder or VariableFieldBuilder or custom');
     }
-}
 
-function recursiveBuild(name, model, instance, children, alias = null) {
-    const nested = instance[children]
-
-    if (nested) {
-        if (nested.build) {
-            instance[children] = nested.build?.(name, model)
-        } else {
-            for (let key in nested) {
-                nested[key] = nested[key].build?.(alias ?? key, model)
+    recursiveBuild(name, model, instance, children, alias = null) {
+        const nested = instance[children]
+    
+        if (nested) {
+            if (nested.build) {
+                instance[children] = nested.build?.(name, model)
+            } else {
+                for (let key in nested) {
+                    nested[key] = nested[key].build?.(alias ?? key, model)
+                }
             }
         }
+    
+        instance.name ??= name
+        instance.setModel(model)
+        return instance
     }
-
-    instance.name ??= name
-    instance.setModel(model)
-    return instance
 }

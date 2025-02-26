@@ -4,6 +4,8 @@
  * @author Egor Vasyakin <egor@evas-php.com>
  * @license CC-BY-4.0
  */
+
+import { Field } from './Field.js'
 import { FieldableBuilder } from './FieldableBuilder.js'
 
 export class FieldBuilder extends FieldableBuilder {
@@ -52,5 +54,9 @@ export class FieldBuilder extends FieldableBuilder {
         }
         this._options = value
         return this
+    }
+
+    build(name, model) {
+        return this.recursiveBuild(name, model, new Field(this), 'itemOf')
     }
 }
