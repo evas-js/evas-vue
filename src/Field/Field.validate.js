@@ -148,9 +148,8 @@ export function setFieldValidate(field) {
      */
     field.prototype.validateArrayItems = function (value, values) {
         if (this.type !== 'array' || !this.itemOf) return true
-        console.error(this)
         // const handler = this.model.
-        for (const items of value) {
+        for (const item of value) {
             if (!this.itemOf.isValid(item, values)) {
                 // this.setError(this.itemOf.error)
                 this.error = this.itemOf.error
