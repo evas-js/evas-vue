@@ -19,7 +19,6 @@ export class Group {
             items = name
             name = null
         }
-        console.log(name, items)
         this.name = name
         this.setItems(items)
     }

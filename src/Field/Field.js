@@ -71,7 +71,7 @@ export class Field extends Fieldable {
      */
     convertType(value) {
         if (!this.required && this.isEmptyValue(value)) return value
-        if (this.isArrayType) return Array.isArray(value) ? Array.from(value) : value;
+        if (this.isArrayType) return Array.isArray(value) ? value : Array.from(value);
         if (this.isStringType) return value == null ? '' : String(value)
         if (this.isNumberType) {
             let newValue = Number(value)
