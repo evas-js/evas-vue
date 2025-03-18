@@ -150,7 +150,7 @@ export function setFieldValidate(field) {
         if (this.type !== 'array' || !this.itemOf) return true
         // const handler = this.model.
         for (const item of value) {
-            if (!this.itemOf.isValid(item, values)) {
+            if (!(this.itemOf?.isValid(item, values) ?? true)) {
                 // this.setError(this.itemOf.error)
                 this.error = this.itemOf.error
                 return false
@@ -169,7 +169,7 @@ export function setFieldValidate(field) {
         if (this.type !== 'object' || !this.itemOf) return true
         // const handler = this.model.
         for (const [key, item] of Object.entries(value)) {
-            if (!this.itemOf[key].isValid(item, values)) {
+            if (!(this.itemOf[key]?.isValid(item, values) ?? true)) {
                 // this.setError(this.itemOf.error)
                 this.error = this.itemOf[key].error
                 return false
