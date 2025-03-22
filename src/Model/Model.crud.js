@@ -134,7 +134,7 @@ Object.defineProperty(Model.prototype, '$dataToSave', {
         else {
             let defaultData = {}
             this.constructor.eachFields(field => {
-                if (field.default) defaultData[field.name] = this[field.name]
+                if (!field.isEmptyValue(field.default)) defaultData[field.name] = this[field.name]
             }, this.$applyFieldsDisplayRules())
             data = { ...data, ...defaultData }
         }

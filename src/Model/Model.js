@@ -15,7 +15,8 @@ export class Model {
     set(target, key, value) {
         const field = target.constructor?.field(key)
         if (field) {
-            value = field.convertTypeWithDefault(value)
+            // value = field.convertTypeWithDefault(value)
+            value = field.convertType(value)
         }
         target[key] = value
         return true
