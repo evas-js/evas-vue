@@ -147,6 +147,7 @@ export function setFieldValidate(field) {
      * @return { Boolean }
      */
     field.prototype.validateArrayItems = function (value, values) {
+        if (!Array.isArray(value)) return true // для случаев если не массив и не required
         if (this.type !== 'array' || !this.itemOf) return true
         // const handler = this.model.
         for (const item of value) {
@@ -166,6 +167,7 @@ export function setFieldValidate(field) {
      * @return { Boolean }
      */
     field.prototype.validateObjectItems = function (value, values) {
+        if (typeof value !== 'object' || !value) return true // для случаев если не объект и не required
         if (this.type !== 'object' || !this.itemOf) return true
         // const handler = this.model.
         for (const [key, item] of Object.entries(value)) {
