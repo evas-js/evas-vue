@@ -25,7 +25,7 @@ Model.alwaysSend = null
  */
 Model.fields = function () {
     if (this.isRootModel()) return {}
-    if (!this._fields) {
+    if (!this._fields || this._fields === this.__proto__._fields) {
         this._fields = {}
         this._fields = this.buildFields(this.setFields())
         // this.displayRules()
