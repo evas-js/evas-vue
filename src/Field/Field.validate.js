@@ -16,7 +16,9 @@ export function setFieldValidate(field) {
      * @return { Boolean } false
      */
     field.prototype.setError = function (type, additionalCtx = {}) {
-        const ctx = Object.assign(this, additionalCtx)
+        const ctx = type === 'custom'
+            ? { error: additionalCtx, field: this }
+            : Object.assign(this, additionalCtx)
         return logger.methodCall(`Field{${this.name}}.setError`, arguments, () => {
             this.error = EvasVue.getValidateError(type, ctx)
             logger.keyValue('error', this.error)
@@ -181,6 +183,20 @@ export function setFieldValidate(field) {
     }
 
     /**
+     * Валидация поля с помощью кастомной функции.
+     * @param { any } value значение текущего поля
+     * @param { Object } values значения всех полей по именам
+     * @return { Boolean }
+     */
+    field.prototype.validateCustom = function (value, values) {
+        const cb = this.customValidate
+        if (!cb || typeof cb !== 'function') return true
+        const result = cb(value, values)
+        if (true === result) return true
+        return this.setError('custom', result)
+    }
+
+    /**
      * Проверка значения.
      * @param { any } value значение текущего
      * @param { Object } values значения всех полей по именам
@@ -198,6 +214,7 @@ export function setFieldValidate(field) {
         && this.validateSame(value, values)
         && this.validateArrayItems(value, values)
         && this.validateObjectItems(value, values)
+        && this.validateCustom(value, values)
     }
 
     /**

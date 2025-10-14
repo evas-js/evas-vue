@@ -28,6 +28,8 @@ export class Fieldable extends PropsWritable {
     same
     /** @var { String } лейбл совпадающего поля */
     sameLabel
+    /** @var { Function|null } кастомная функция валидации */
+    customValidate
 
     /** @var { any } значение по умолчанию */
     default

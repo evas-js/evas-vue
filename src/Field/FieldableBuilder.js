@@ -22,6 +22,8 @@ export class FieldableBuilder extends PropsWritable {
     _same
     /** @var { String } лейбл совпадающего поля */
     _sameLabel
+    /** @var { Function|null } кастомная функция валидации */
+    _customValidate
     /** @var { any } значение по умолчанию */
     _default
     /** @var { String|Object } информация о способе отображения поля */
@@ -77,6 +79,13 @@ export class FieldableBuilder extends PropsWritable {
     }
     sameLabel(value) {
         this._sameLabel = value
+        return this
+    }
+    customValidate(value) {
+        if (typeof value !== 'function') {
+            console.error('customValidate must be a Function, given:', value)
+        }
+        this._customValidate = value
         return this
     }
 
