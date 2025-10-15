@@ -144,16 +144,16 @@ Model.prototype.$validate = function (fieldNames = null) {
 Model.validate = function (entity, fieldNames = null) {
     if (Array.isArray(entity)) {
         entity.forEach(_entity => this.validate(_entity, fieldNames))
-    } 
+    }
     else if (entity && entity instanceof this) {
         return entity.$validate(fieldNames)
-    } 
+    }
     else if (entity && 'object' === typeof entity) {
         return new this(entity).$validate(fieldNames)
     }
     console.warn(
-        `${this.entityName}.validate() argument 1` 
-        + ' must be an object or an array of the objects' 
+        `${this.entityName}.validate() argument 1`
+        + ' must be an object or an array of the objects'
         + `, given:`, entity
     )
     return false

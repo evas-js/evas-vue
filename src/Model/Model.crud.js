@@ -116,11 +116,11 @@ Model.delete = function (entity, cb, afterFetch = false) {
 }
 
 /**
- * Сохранение связанныъ записей
+ * Сохранение связанных записей
  * @param Object entity
  * @param Function cb
  */
-Model.prototype.$mutateRelations = function (entity, cb) {
+Model.prototype.$mutateRelateds = function (entity, cb) {
     if (this.constructor.relationMutationType === 'with') return 
     this.$dirtyRelateds().forEach(relationName => {
         const { foreign, local, name, foreignModel } =
@@ -214,19 +214,19 @@ Model.prototype.$save = function (cb) {
         }
         
         if (!this.$isDirtyData && this.$isDirtyRelateds && this.constructor.relationMutationType !== 'with') {
-            this.$mutateRelations(this, cb)
+            this.$mutateRelateds(this, cb)
             return
         }
 
-        const mutateRelationsAfterSave = (data, entities, res) => {
-            entities.forEach(entity => this.$mutateRelations(entity, cb))
+        const mutateRelatedsAfterSave = (data, entities, res) => {
+            entities.forEach(entity => this.$mutateRelateds(entity, cb))
             cb?.(data, entities, res)
         }
 
         if (this.$isNew) {
             this.$beforeInsert()
             if (this.$validate()) {
-                if (this.constructor.useApi) this.constructor.fetchInsert(this.$dataToSave, mutateRelationsAfterSave)
+                if (this.constructor.useApi) this.constructor.fetchInsert(this.$dataToSave, mutateRelatedsAfterSave)
                 else this.$saveState()
                 logger.line('Inserted')
                 this.$afterInsert()
@@ -234,7 +234,7 @@ Model.prototype.$save = function (cb) {
         } else {
             this.$beforeUpdate()
             if (this.$validate()) {
-                if (this.constructor.useApi) this.constructor.fetchUpdate(this.$dataToSave, mutateRelationsAfterSave)
+                if (this.constructor.useApi) this.constructor.fetchUpdate(this.$dataToSave, mutateRelatedsAfterSave)
                 else this.$saveState()
                 logger.line('Updated')
                 this.$afterUpdate()
