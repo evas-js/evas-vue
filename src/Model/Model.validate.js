@@ -127,6 +127,7 @@ Model.prototype.$validate = function (fieldNames = null) {
 
         this.constructor.eachRelations(relation => {
             [this[relation.name]].flat().forEach(related => {
+                if (!related) return
                 if (!related.$validate()) {
                     this.constructor.handleValidateError(relation, related.$errors)
                     this.$errors.push(related.$errors)

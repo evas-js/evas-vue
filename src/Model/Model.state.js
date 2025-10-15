@@ -94,7 +94,7 @@ Model.prototype.$isDirtyField = function (name) {
  */
 Model.prototype.$isDirtyRelated = function (relation) {
     if (!(relation instanceof Relation)) relation = this.relation()[relation]
-    return [this[relation.name]].flat().some(relalted => relalted.$isDirty)
+    return [this[relation.name]].flat().some(related => related?.$isDirty)
 }
 
 /**
