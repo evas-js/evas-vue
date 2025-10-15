@@ -9,6 +9,12 @@ import { Model } from './Model.js'
 import { Relation } from '../Relation.js'
 
 /**
+ * Тип мутации связанных модели
+ * @enum 'default' | 'single \ 'batch'
+ */
+Model.relationMutationType = 'default'
+
+/**
  * Установка связей модели.
  * @return Array
  */
@@ -70,7 +76,6 @@ Model.eachRelations = function (cb, names) {
     }
     return false
 }
-
 
 // Установка связей
 
