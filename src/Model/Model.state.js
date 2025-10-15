@@ -27,12 +27,11 @@ Model.prototype.$saveState = function () {
  * @param Array|null имена полей и/или связей
  */
 Model.prototype.$rollbackChanges = function (names) {
-    const cb = field => {
-        this[field.name] = structuredClone(this.$state[field.name])
-    }
+    const cb = field => (this[field.name] = structuredClone(this.$state[field.name]))
     this.constructor.eachFields(cb, names)
     this.constructor.eachRelations(cb, names)
 }
+
 
 /**
  * @var Boolean Является ли запись новой.
@@ -48,12 +47,12 @@ Object.defineProperty(Model.prototype, '$isNew', {
  */
 Object.defineProperty(Model.prototype, '$isDirty', {
     get: function () {
-        return this.$isDirtyData || this.$isDirtyRelations
+        return this.$isDirtyData || this.$isDirtyRelateds
     },
 })
 
 /**
- * @var Boolean Является ли связанная Модель с записми "грязной" (с изменёнными, но не сохранёнными данными)
+ * @var Являются ли "грязными" поля записи (с изменёнными, но не сохранёнными данными)
  */
 Object.defineProperty(Model.prototype, '$isDirtyData', {
     get: function () {
@@ -62,11 +61,11 @@ Object.defineProperty(Model.prototype, '$isDirtyData', {
 })
 
 /**
- * @var Boolean Является ли связанная Модель с записми "грязной" (с изменёнными, но не сохранёнными данными)
+ * @var Boolean Являются ли "грязными" записи связанные с текущей записью (с изменёнными, но не сохранёнными данными)
  */
-Object.defineProperty(Model.prototype, '$isDirtyRelations', {
+Object.defineProperty(Model.prototype, '$isDirtyRelateds', {
     get: function () {
-        return this.$dirtyRelations().length > 0
+        return this.$dirtyRelateds().length > 0
     },
 })
 
@@ -93,9 +92,9 @@ Model.prototype.$isDirtyField = function (name) {
  * @param String|Number|Relation имя связи или связь
  * @return Boolean
  */
-Model.prototype.$isDirtyRelateds = function (relation) {
+Model.prototype.$isDirtyRelated = function (relation) {
     if (!(relation instanceof Relation)) relation = this.relation()[relation]
-    return [this[relation.name]].flat().some(relationEntity => relationEntity.$isDirty)
+    return [this[relation.name]].flat().some(relalted => relalted.$isDirty)
 }
 
 /**
@@ -105,7 +104,7 @@ Model.prototype.$isDirtyRelateds = function (relation) {
  */
 Model.prototype.$dirtyFields = function (names) {
     let dirty = []
-    this.constructor.eachFields(field => {
+    this.constructor.eachFields((field) => {
         if (this.$isDirtyField(field.name)) dirty.push(field.name)
     }, names)
     return dirty
@@ -116,10 +115,10 @@ Model.prototype.$dirtyFields = function (names) {
  * @param Array|null имена полей и/или связей
  * @return String[]
  */
-Model.prototype.$dirtyRelations = function (names) {
+Model.prototype.$dirtyRelateds = function (names) {
     let dirty = []
     this.constructor.eachRelations(relation => {
-        if (this.$isDirtyRelateds(relation)) dirty.push(relation.name)
+        if (this.$isDirtyRelated(relation)) dirty.push(relation.name)
     }, names)
     return dirty
 }
@@ -127,19 +126,8 @@ Model.prototype.$dirtyRelations = function (names) {
 /**
  * @var Object изменённые данные {key: val, ...}
  */
-Object.defineProperty(Model.prototype, '$dirtyData', {
-    get: function () {
-        let data = {}
-        this.$dirtyFields().forEach(name => {
-            let relation = this.constructor.relation(name)
-            if (relation) {
-                if (relation.multiple && Array.isArray(this[name])) {
-                    data[name] = this[name]
-                        .map(relationEntity => relationEntity.$isDirty && relationEntity.$dirtyData)
-                        .filter(data => data)
-                } else data[name] = this[name].$dirtyData
-            } else data[name] = this[name]
-        })
-        return data
-    },
-})
+Object.defineProperty(Model.prototype, '$dirtyData', { get: function () {
+    let data = {}
+    this.$dirtyFields().forEach((name) => (data[name] = this[name]))
+    return data
+}})

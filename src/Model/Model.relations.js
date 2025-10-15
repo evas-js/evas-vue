@@ -10,13 +10,13 @@ import { Relation } from '../Relation.js'
 
 /**
  * Тип мутации связанных модели
- * @enum 'default' | 'single \ 'batch'
+ * @var { String } 'with' | 'single' | 'batch'
  */
-Model.relationMutationType = 'default'
+Model.relationMutationType = 'with'
 
 /**
  * Установка связей модели.
- * @return Array
+ * @return { Array }
  */
 Model.setRelations = function () {
     return []
@@ -76,6 +76,7 @@ Model.eachRelations = function (cb, names) {
     }
     return false
 }
+
 
 // Установка связей
 

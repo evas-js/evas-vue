@@ -40,6 +40,7 @@ Model.hasApiRoute = function (name) {
     return true
 }
 
+
 /**
  * Обработка данных полученных через fetch.
  * @param mixed данные
@@ -56,7 +57,7 @@ Model.apiDataFetched = function (data, res, name, cb) {
         if (data.$data) {
             logger.methodCall(`${this.entityName}.apiDataFetched`, arguments, () => {
                 // logger.line()
-                data.$data.forEach(sub => {
+                data.$data.forEach((sub) => {
                     let type = sub.type || this.entityName
                     let model = EvasVue.getModel(type)
                     if (!model) {
@@ -78,7 +79,9 @@ Model.apiDataFetched = function (data, res, name, cb) {
     }
 }
 
+
 // Вызов api-эндпоинта
+
 
 /**
  * Вызов api-эндпоинта без сохранения разультата.

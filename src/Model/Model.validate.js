@@ -19,8 +19,7 @@ Model.validateErrorHandler = null
  * @return self
  */
 Model.setValidateErrorHandler = function (cb) {
-    if ('function' !== typeof cb)
-        throw new Error(`default validate error handler must be a function, ${typeof cb} given`)
+    if ('function' !== typeof cb) throw new Error(`validate error handler must be a function, ${typeof cb} given`)
     this.validateErrorHandler = cb
     return this
 }
@@ -52,7 +51,8 @@ Model.prototype.$clearErrors = function () {
  */
 Model.requiredFields = function () {
     return Object.fromEntries(
-        Object.entries(this.fields()).filter(([name, field]) => !!field.required)
+        Object.entries(this.fields())
+        .filter(([name, field]) => !!field.required)
     )
 }
 /**
@@ -104,7 +104,7 @@ Model.prototype.$validate = function (fieldNames = null) {
     return logger.methodCall(`${this.$entityNameWithId}.$validate`, arguments, () => {
         if (!fieldNames) fieldNames = this.$fieldNamesForValidate()
         this.$clearErrors()
-        this.constructor.eachFields(field => {
+        this.constructor.eachFields((field) => {
             if (!(field instanceof VariableField || field instanceof Field)) return
             // console.warn(field.name, this[field.name])
 
@@ -126,10 +126,10 @@ Model.prototype.$validate = function (fieldNames = null) {
         }, fieldNames)
 
         this.constructor.eachRelations(relation => {
-            ;[this[relation.name]].flat().forEach(relationEntity => {
-                if (!relationEntity.$validate()) {
-                    this.constructor.handleValidateError(relation, relationEntity.$errors)
-                    this.$errors.push(relationEntity.$errors)
+            [this[relation.name]].flat().forEach(related => {
+                if (!related.$validate()) {
+                    this.constructor.handleValidateError(relation, related.$errors)
+                    this.$errors.push(related.$errors)
                 }
             })
         })
@@ -143,16 +143,17 @@ Model.prototype.$validate = function (fieldNames = null) {
 Model.validate = function (entity, fieldNames = null) {
     if (Array.isArray(entity)) {
         entity.forEach(_entity => this.validate(_entity, fieldNames))
-    } else if (entity && entity instanceof this) {
+    } 
+    else if (entity && entity instanceof this) {
         return entity.$validate(fieldNames)
-    } else if (entity && 'object' === typeof entity) {
+    } 
+    else if (entity && 'object' === typeof entity) {
         return new this(entity).$validate(fieldNames)
     }
     console.warn(
-        `${this.entityName}.validate() argument 1` +
-            ' must be an object or an array of the objects' +
-            `, given:`,
-        entity
+        `${this.entityName}.validate() argument 1` 
+        + ' must be an object or an array of the objects' 
+        + `, given:`, entity
     )
     return false
 }
