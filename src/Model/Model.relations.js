@@ -9,8 +9,14 @@ import { Model } from './Model.js'
 import { Relation } from '../Relation.js'
 
 /**
+ * Тип мутации связанных модели
+ * @var { String } 'with' | 'single' | 'batch'
+ */
+Model.relationMutationType = 'with'
+
+/**
  * Установка связей модели.
- * @return Array
+ * @return { Array }
  */
 Model.setRelations = function () {
     return []

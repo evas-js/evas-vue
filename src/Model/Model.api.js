@@ -25,9 +25,7 @@ Model.getApiRoute = function (name) {
         throw new Error(`${this.entityName} not has route ${name}`)
     }
     if (!this.api) {
-        throw new Error(
-            `Api object does not provide to ${this.entityName} model`
-        )
+        throw new Error(`Api object does not provide to ${this.entityName} model`)
     }
     return this.routes[name]
 }
@@ -50,7 +48,7 @@ Model.hasApiRoute = function (name) {
  * @param String имя вызванного метода
  * @param Function колбэк
  */
-Model.apiDataFetched = function (data, res, name, cb) {    
+Model.apiDataFetched = function (data, res, name, cb) {
     const hooked = this.beforeFetched(name, data, res)
     // hooked data
     if (hooked?.data) data = hooked.data
@@ -107,59 +105,56 @@ Model.fetch = function (name, args, cb) {
         return logger.line(`Api not enabled for model "${this.entityName}"`)
     }
     if (args instanceof Model) args = Object.assign({}, args)
-    
+
     const hooked = this.beforeFetch(name, args, cb)
     // hooked args
     if (hooked?.args) args = hooked.args
 
-    return this.callApiRoute(
-        name, args, (data, res) => this.apiDataFetched(data, res, name, cb)
-    )
+    return this.callApiRoute(name, args, (data, res) => this.apiDataFetched(data, res, name, cb))
 }
-
 
 // Вызов CRUD api-эндпоинта.
 
 Model.fetchList = function (args, cb) {
-    return logger.methodCall(
-        `${this.entityName}.fetchList`,
-        arguments,
-        () => this.fetch('list', args, cb)
+    return logger.methodCall(`${this.entityName}.fetchList`, arguments, () =>
+        this.fetch('list', args, cb)
     )
 }
 
 Model.fetchOne = function (args, cb) {
-    return logger.methodCall(
-        `${this.entityName}.fetchOne`,
-        arguments,
-        () => this.fetch('one', args, cb)
+    return logger.methodCall(`${this.entityName}.fetchOne`, arguments, () =>
+        this.fetch('one', args, cb)
     )
 }
 
 Model.fetchInsert = function (args, cb) {
-    return logger.methodCall(
-        `${this.entityName}.fetchInsert`,
-        arguments,
-        () => this.fetch('insert', args, cb)
+    return logger.methodCall(`${this.entityName}.fetchInsert`, arguments, () =>
+        this.fetch('insert', args, cb)
     )
 }
 
 Model.fetchUpdate = function (args, cb) {
-    return logger.methodCall(
-        `${this.entityName}.fetchUpdate`,
-        arguments,
-        () => this.fetch('update', args, cb)
+    return logger.methodCall(`${this.entityName}.fetchUpdate`, arguments, () =>
+        this.fetch('update', args, cb)
     )
 }
 
 Model.fetchDelete = function (args, cb) {
-    return logger.methodCall(
-        `${this.entityName}.fetchDelete`,
-        arguments,
-        () => this.fetch('delete', args, cb)
+    return logger.methodCall(`${this.entityName}.fetchDelete`, arguments, () =>
+        this.fetch('delete', args, cb)
     )
 }
 
+// Запрос связанных записей
+Model.prototype.fetchRelation = function (name, args, cb) {
+    return logger.methodCall(`${this.entityName}.fetchRelation`, arguments, () => {
+        const { foreignModel, multiple } = this.relation(name)
+        foreignModel[multiple ? 'fetchList' : 'fetchOne'](args, (data, entities, res) => {
+            this[name] = foreignModel.all()
+            cb && cb?.(data, entities, res)
+        })
+    })
+}
 
 // Model api hooks
 Model.beforeFetch = function (name, args) {

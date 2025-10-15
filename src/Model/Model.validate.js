@@ -19,9 +19,7 @@ Model.validateErrorHandler = null
  * @return self
  */
 Model.setValidateErrorHandler = function (cb) {
-    if ('function' !== typeof cb) throw new Error(
-        `default validate error handler must be a function, ${typeof cb} given`
-    )
+    if ('function' !== typeof cb) throw new Error(`validate error handler must be a function, ${typeof cb} given`)
     this.validateErrorHandler = cb
     return this
 }
@@ -79,7 +77,7 @@ Model.prototype.$fieldNamesForValidate = function () {
     logger.keyValue('this', this)
     logger.keyValue('this.$state', this.$state)
     logger.keyValue('this.$isNew', this.$isNew)
-    let fieldNames = this.$isNew 
+    let fieldNames = this.$isNew
         ? display.concat(dirty)
         : display.filter(name => required.includes(name) || dirty.includes(name))
     if (Array.isArray(this.constructor.alwaysSend)) {
@@ -125,8 +123,17 @@ Model.prototype.$validate = function (fieldNames = null) {
             //         return field.itemOf.convertType(item)
             //     })
             // }
-
         }, fieldNames)
+
+        this.constructor.eachRelations(relation => {
+            [this[relation.name]].flat().forEach(related => {
+                if (!related) return
+                if (!related.$validate()) {
+                    this.constructor.handleValidateError(relation, related.$errors)
+                    this.$errors.push(related.$errors)
+                }
+            })
+        })
         return this.$errors.length < 1
     })
 }
@@ -136,13 +143,13 @@ Model.prototype.$validate = function (fieldNames = null) {
  */
 Model.validate = function (entity, fieldNames = null) {
     if (Array.isArray(entity)) {
-        entity.forEach((_entity) => this.validate(_entity, fieldNames))
+        entity.forEach(_entity => this.validate(_entity, fieldNames))
     }
     else if (entity && entity instanceof this) {
         return entity.$validate(fieldNames)
     }
     else if (entity && 'object' === typeof entity) {
-        return (new this(entity)).$validate(fieldNames)
+        return new this(entity).$validate(fieldNames)
     }
     console.warn(
         `${this.entityName}.validate() argument 1`

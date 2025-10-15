@@ -27,7 +27,7 @@ Model.prototype.$saveState = function () {
  * @param Array|null имена полей и/или связей
  */
 Model.prototype.$rollbackChanges = function (names) {
-    const cb = field => {this[field.name] = structuredClone(this.$state[field.name])}
+    const cb = field => (this[field.name] = structuredClone(this.$state[field.name]))
     this.constructor.eachFields(cb, names)
     this.constructor.eachRelations(cb, names)
 }
@@ -36,17 +36,38 @@ Model.prototype.$rollbackChanges = function (names) {
 /**
  * @var Boolean Является ли запись новой.
  */
-Object.defineProperty(Model.prototype, '$isNew', { get: function () {
-    return this.$id ? false : true
-}})
+Object.defineProperty(Model.prototype, '$isNew', {
+    get: function () {
+        return this.$id ? false : true
+    },
+})
 
 /**
  * @var Boolean Является ли запись "грязной" (с изменёнными, но не сохранёнными данными)
  */
-Object.defineProperty(Model.prototype, '$isDirty', { get: function () {
-    return this.$dirtyFields().length > 0
-}})
+Object.defineProperty(Model.prototype, '$isDirty', {
+    get: function () {
+        return this.$isDirtyData || this.$isDirtyRelateds
+    },
+})
 
+/**
+ * @var Являются ли "грязными" поля записи (с изменёнными, но не сохранёнными данными)
+ */
+Object.defineProperty(Model.prototype, '$isDirtyData', {
+    get: function () {
+        return this.$dirtyFields().length > 0
+    },
+})
+
+/**
+ * @var Boolean Являются ли "грязными" записи связанные с текущей записью (с изменёнными, но не сохранёнными данными)
+ */
+Object.defineProperty(Model.prototype, '$isDirtyRelateds', {
+    get: function () {
+        return this.$dirtyRelateds().length > 0
+    },
+})
 
 /**
  * Проверка поля на изменённость.
@@ -58,7 +79,7 @@ Model.prototype.$isDirtyField = function (name) {
     let value = this[name]
     if (Array.isArray(stateValue) && Array.isArray(value)) {
         return JSON.stringify(stateValue) !== JSON.stringify(value)
-    } else if (typeof(stateValue) === 'object' && ![null, undefined].includes(stateValue)) {
+    } else if (typeof stateValue === 'object' && ![null, undefined].includes(stateValue)) {
         return JSON.stringify(stateValue) !== JSON.stringify(value)
     } else if ([null, undefined].includes(stateValue) && value === '') {
         return false
@@ -71,34 +92,9 @@ Model.prototype.$isDirtyField = function (name) {
  * @param String|Number|Relation имя связи или связь
  * @return Boolean
  */
-Model.prototype.$isDirtyRelateds = function (relation) {
+Model.prototype.$isDirtyRelated = function (relation) {
     if (!(relation instanceof Relation)) relation = this.relation()[relation]
-    let {name, local, foreign, multiple} = relation
-    if (multiple) {
-        if (Array.isArray(this[name])) {
-            let res = false
-            let ids = []
-            this[name].forEach(related => {
-                if (related[foreign]) ids.push(related[foreign])
-            })
-            if (Array.isArray(this.$state[name])) {
-                let idsLocal = []
-                this.$state[name].forEach(related => {
-                    if (related[foreign]) idsLocal.push(related[foreign])
-                })
-                res = JSON.stringify(ids.sort()) !== JSON.stringify(idsLocal.sort())
-            }
-            if (res && Array.isArray(this.$state?.[local])) {
-                res = JSON.stringify(ids.sort()) !== JSON.stringify(this.$state?.[local].sort())
-            }
-            return res
-        }
-    } else {
-        let res = this.$state[name]?.[foreign] !== this[name]?.[foreign]
-        if (res) {
-            return this.$state?.[local] !== this[name]?.[foreign]
-        }
-    }
+    return [this[relation.name]].flat().some(related => related?.$isDirty)
 }
 
 /**
@@ -111,8 +107,18 @@ Model.prototype.$dirtyFields = function (names) {
     this.constructor.eachFields((field) => {
         if (this.$isDirtyField(field.name)) dirty.push(field.name)
     }, names)
-    this.constructor.eachRelations((relation) => {
-        if (this.$isDirtyRelateds(relation)) dirty.push(relation.name)
+    return dirty
+}
+
+/**
+ * Получение имён изменённых полей и связанных записей.
+ * @param Array|null имена полей и/или связей
+ * @return String[]
+ */
+Model.prototype.$dirtyRelateds = function (names) {
+    let dirty = []
+    this.constructor.eachRelations(relation => {
+        if (this.$isDirtyRelated(relation)) dirty.push(relation.name)
     }, names)
     return dirty
 }

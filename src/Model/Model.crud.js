@@ -115,6 +115,41 @@ Model.delete = function (entity, cb, afterFetch = false) {
     }
 }
 
+/**
+ * Сохранение связанных записей
+ * @param Object entity
+ * @param Function cb
+ */
+Model.prototype.$mutateRelateds = function (entity, cb) {
+    if (this.constructor.relationMutationType === 'with') return 
+    this.$dirtyRelateds().forEach(relationName => {
+        const { foreign, local, name, foreignModel } =
+            this.constructor.relation(relationName)
+        const dataToFetch = { Insert: [], Update: [], Delete: [] }
+        const save = related => {
+            if (related?.$isDirty) {
+                if (this.$isNew) related[foreign] = entity[local]
+                if (this.constructor.relationMutationType === 'single') {
+                    related[related[foreign] ? '$save' : '$delete'](cb)
+                } else if (related.$id) {
+                    dataToFetch[related[foreign] ? 'Update' : 'Delete'].push(related.$dataToSave)
+                } else {
+                    dataToFetch['Insert'].push(related.$dataToSave)
+                }
+            }
+        }
+
+        [this[name]].flat().forEach(related => save(related))
+
+        if (this.constructor.relationMutationType === 'batch') {
+            for (const method in dataToFetch) {
+                if (dataToFetch[method]?.length > 0) {
+                    foreignModel[`fetch${method}`](dataToFetch[method], cb)
+                }
+            }
+        }
+    })
+}
 
 // instance mutations
 
@@ -127,7 +162,7 @@ Object.defineProperty(Model.prototype, '$dataToSave', {
         let data = { ...this.$dirtyData }
         if (Array.isArray(this.constructor.alwaysSend)) {
             let alwaysSendData = {}
-            this.constructor.alwaysSend.forEach(key => alwaysSendData[key] = this[key])
+            this.constructor.alwaysSend.forEach(key => (alwaysSendData[key] = this[key]))
             data = { ...alwaysSendData, ...data }
         }
         if (!this.$isNew) data[this.constructor.primary] = this.$id
@@ -139,13 +174,13 @@ Object.defineProperty(Model.prototype, '$dataToSave', {
             data = { ...data, ...defaultData }
         }
         this.constructor.eachFields(field => {
-            if (!field.required && field.type === 'string' &&  data[field.name] === '') {
+            if (!field.required && field.type === 'string' && data[field.name] === '') {
                 data[field.name] = null
             }
         })
         logger.line('$dataToSave:', data)
         return data
-    }
+    },
 })
 
 Model.prototype.$logModelInfo = function () {
@@ -162,7 +197,7 @@ Model.prototype.$logModelInfo = function () {
             logger.keyValue(`${this.constructor.entityName}.alwaysSend`, this.constructor.alwaysSend)
             logger.keyValue(`${this.constructor.entityName}.relationNames()`, this.constructor.relationNames())
             logger.keyValue(`${this.constructor.entityName}.useApi`, this.constructor.useApi)
-        }, `Model info (${this.constructor.entityName})`, )
+        }, `Model info (${this.constructor.entityName})`)
     }, 'Entity info')
 }
 
@@ -175,13 +210,23 @@ Model.prototype.$save = function (cb) {
         this.$logModelInfo()
         if (!this.$isDirty) {
             logger.line('Nothing to save. End save')
-            return 
+            return
+        }
+        
+        if (!this.$isDirtyData && this.$isDirtyRelateds && this.constructor.relationMutationType !== 'with') {
+            this.$mutateRelateds(this, cb)
+            return
+        }
+
+        const mutateRelatedsAfterSave = (data, entities, res) => {
+            entities.forEach(entity => this.$mutateRelateds(entity, cb))
+            cb?.(data, entities, res)
         }
 
         if (this.$isNew) {
             this.$beforeInsert()
             if (this.$validate()) {
-                if (this.constructor.useApi) this.constructor.fetchInsert(this.$dataToSave, cb)
+                if (this.constructor.useApi) this.constructor.fetchInsert(this.$dataToSave, mutateRelatedsAfterSave)
                 else this.$saveState()
                 logger.line('Inserted')
                 this.$afterInsert()
@@ -189,12 +234,13 @@ Model.prototype.$save = function (cb) {
         } else {
             this.$beforeUpdate()
             if (this.$validate()) {
-                if (this.constructor.useApi) this.constructor.fetchUpdate(this.$dataToSave, cb)
+                if (this.constructor.useApi) this.constructor.fetchUpdate(this.$dataToSave, mutateRelatedsAfterSave)
                 else this.$saveState()
                 logger.line('Updated')
                 this.$afterUpdate()
             }
         }
+
         logger.line('End save')
     })
 }
@@ -221,4 +267,3 @@ Model.prototype.$beforeUpdate = function () {}
 Model.prototype.$afterUpdate = function () {}
 Model.prototype.$beforeDelete = function () {}
 Model.prototype.$afterDelete = function () {}
-
