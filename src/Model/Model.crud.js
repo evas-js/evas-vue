@@ -121,20 +121,20 @@ Model.delete = function (entity, cb, afterFetch = false) {
  * @param Function cb
  */
 Model.prototype.$mutateRelations = function (entity, cb) {
-    if (this.constructor.relationMutationType === 'with') return
+    if (this.constructor.relationMutationType === 'with') return 
     this.$dirtyRelateds().forEach(relationName => {
         const { foreign, local, name, foreignModel } =
             this.constructor.relation(relationName)
         const dataToFetch = { Insert: [], Update: [], Delete: [] }
         const save = related => {
-            if (related.$isDirty) {
+            if (related?.$isDirty) {
                 if (this.$isNew) related[foreign] = entity[local]
                 if (this.constructor.relationMutationType === 'single') {
                     related[related[foreign] ? '$save' : '$delete'](cb)
                 } else if (related.$id) {
                     dataToFetch[related[foreign] ? 'Update' : 'Delete'].push(related.$dataToSave)
                 } else {
-                    dataToFetch.Insert.push(relationEntity.$dataToSave)
+                    dataToFetch['Insert'].push(related.$dataToSave)
                 }
             }
         }
@@ -212,7 +212,8 @@ Model.prototype.$save = function (cb) {
             logger.line('Nothing to save. End save')
             return
         }
-        if (!this.$isDirtyData && this.$isDirtyRelateds) {
+        
+        if (!this.$isDirtyData && this.$isDirtyRelateds && this.constructor.relationMutationType !== 'with') {
             this.$mutateRelations(this, cb)
             return
         }
