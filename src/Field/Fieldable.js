@@ -64,7 +64,7 @@ export class Fieldable extends PropsWritable {
      * @return { any }
      */
     getDefault() {
-        return 'function' === typeof this.default ? this.default() : this.default
+        return structuredClone({ value: 'function' === typeof this.default ? this.default() : this.default }).value
     }
 
     /**
