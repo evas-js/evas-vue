@@ -233,12 +233,9 @@ export const Query = class {
 
         // orderBy (sort)
         if (this._orders.length) {
+            const multiplier = order.desc ? -1 : 1
             for (let order of this._orders) {
-                rows = rows.sort((a, b) => {
-                    if (a[order.column] === b[order.column]) return 0
-                    return (a[order.column] > b[order.column] ? 1 : -1) 
-                    * (order.desc ? -1 : 1)
-                })
+                rows = rows.sort((a, b) => (a[order.column] - b[order.column]) * multiplier)
             }
         }
 
